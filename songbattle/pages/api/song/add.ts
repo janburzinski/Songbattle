@@ -21,11 +21,10 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     "CREATE TABLE songs(id varchar(400) UNIQUE, songlink varchar(400), username varchar(400))"
   );*/
   await db
-    .query("INSERT INTO songs(id, songlink, username) VALUES($1,$2,$3)", [
-      id,
-      songLink,
-      username,
-    ])
+    .query(
+      "INSERT INTO songs(id, songlink, username, votes) VALUES($1,$2,$3,$4)",
+      [id, songLink, username, 0]
+    )
     .then(() => res.send({ created: true }))
     .catch((err) => res.status(400).send({ added: false, message: err }));
 };
