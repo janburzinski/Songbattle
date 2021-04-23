@@ -1,6 +1,4 @@
 import { VercelRequest, VercelResponse } from "@vercel/node";
+import { connectToDb } from "./utils/connecToDb";
 
-export default (request: VercelRequest, response: VercelResponse) => {
-  const { name = "World" } = request.query;
-  response.status(200).send(`Hello ${name}!`);
-};
+export default async (request: VercelRequest, response: VercelResponse) => {};
