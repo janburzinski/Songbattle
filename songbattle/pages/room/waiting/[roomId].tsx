@@ -7,7 +7,7 @@ export default function Home({ songCount }) {
   const router = useRouter();
   const { roomId } = router.query;
   const { data, error } = useSWR(
-    "https://songbattle-jcb.vercel.app/api/song/amount/" + roomId,
+    "https://songbattle-rose.vercel.app/api/song/amount/" + roomId,
     fetch
   );
   return (
