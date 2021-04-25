@@ -2,13 +2,16 @@ import Head from "next/head";
 import styles from "../../../styles/Home.module.css";
 import { useRouter } from "next/router";
 import useSWR from "swr";
+import fetch from "../../../libs/fetch";
+import { url } from "../../consts";
 
-export default function Home({ songCount }) {
+export default function Home() {
   const router = useRouter();
-  const { roomId } = router.query;
-  const { data, error } = useSWR(
-    "https://songbattle-rose.vercel.app/api/song/amount/" + roomId,
-    fetch
+  const roomId = typeof window !== "undefined" ? router.query.roomId : "0";
+  const { data, error } = useSWR<{ info: number }>(
+    url + "/api/song/amount/" + roomId,
+    fetch,
+    { refreshInterval: 12 }
   );
   return (
     <div className={styles.container}>
@@ -18,9 +21,15 @@ export default function Home({ songCount }) {
       <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
           <div>
-            <p className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-              {data}
-            </p>
+            {data ? (
+              <p className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                {data.info}
+              </p>
+            ) : (
+              <p className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                Loading...
+              </p>
+            )}
             <p className="mt-6 text-center text-3xl font-extrabold text-gray-900">
               Waiting for songs...
             </p>
