@@ -19,8 +19,13 @@ export default async (req: VercelRequest, res: VercelResponse) => {
   }
   const db = await connectToDb();
   /*await db.query(
-    "CREATE TABLE songs(id varchar(400) UNIQUE, songlink varchar(400), username varchar(400))"
+    "CREATE TABLE songs(id varchar(400), songlink varchar(400), username varchar(400))"
   );*/
+
+  /**
+   * TODO: Check if Room actually exists
+   */
+
   await db
     .query("INSERT INTO songs(id, songlink, username) VALUES($1,$2,$3)", [
       id,
