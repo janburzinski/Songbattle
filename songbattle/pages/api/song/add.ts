@@ -1,5 +1,5 @@
 import { VercelRequest, VercelResponse } from "@vercel/node";
-import { connectToDb } from "../../../utils/connecToDb";
+import { connectToDb } from "../../../utils/connectToDb";
 
 export default async (req: VercelRequest, res: VercelResponse) => {
   const songLink = req.body.songlink;
@@ -15,16 +15,18 @@ export default async (req: VercelRequest, res: VercelResponse) => {
       added: false,
       message: "Bad Input",
     });
+    return;
   }
   const db = await connectToDb();
   /*await db.query(
     "CREATE TABLE songs(id varchar(400) UNIQUE, songlink varchar(400), username varchar(400))"
   );*/
   await db
-    .query(
-      "INSERT INTO songs(id, songlink, username, votes) VALUES($1,$2,$3,$4)",
-      [id, songLink, username, 0]
-    )
+    .query("INSERT INTO songs(id, songlink, username) VALUES($1,$2,$3)", [
+      id,
+      songLink,
+      username,
+    ])
     .then(() => res.send({ created: true }))
-    .catch((err) => res.status(400).send({ added: false, message: err }));
+    .catch((err) => res.status(400).send({ added: false, message: err.stack }));
 };
