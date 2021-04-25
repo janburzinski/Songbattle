@@ -1,17 +1,25 @@
 import Head from "next/head";
-import styles from "../../styles/Home.module.css";
+import styles from "../../../styles/Home.module.css";
+import { useRouter } from "next/router";
+import useSWR from "swr";
 
-export default function Home() {
+export default function Home({ songCount }) {
+  const router = useRouter();
+  const { roomId } = router.query;
+  const { data, error } = useSWR(
+    "https://songbattle-jcb.vercel.app/api/song/amount/" + roomId,
+    fetch
+  );
   return (
     <div className={styles.container}>
       <Head>
-        <title>Songbattle</title>
+        <title>Songbattle - Waiting for songs...</title>
       </Head>
       <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
           <div>
             <p className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-              0
+              {data}
             </p>
             <p className="mt-6 text-center text-3xl font-extrabold text-gray-900">
               Waiting for songs...
