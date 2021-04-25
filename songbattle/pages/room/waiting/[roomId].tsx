@@ -3,7 +3,7 @@ import styles from "../../../styles/Home.module.css";
 import { useRouter } from "next/router";
 import useSWR from "swr";
 import fetch from "../../../utils/fetch";
-import { url } from "../../consts";
+import { url } from "../../../utils/consts";
 
 export default function Home() {
   const router = useRouter();
