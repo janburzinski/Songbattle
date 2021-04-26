@@ -11,7 +11,7 @@ export default function Home() {
   const { data, error } = useSWR<{ info: number }>(
     url + "/api/song/amount/" + roomId,
     fetch,
-    { refreshInterval: 12 }
+    { refreshInterval: 30 }
   );
   return (
     <div className={styles.container}>

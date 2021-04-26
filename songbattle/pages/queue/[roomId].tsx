@@ -1,10 +1,53 @@
 import Head from "next/head";
 import styles from "../../styles/Home.module.css";
 import { useRouter } from "next/router";
+import { url } from "../../utils/consts";
+import swal from "sweetalert";
 
 export default function Queue() {
   const router = useRouter();
   const { roomId } = router.query;
+
+  const addSong = async (e) => {
+    e.preventDefault();
+
+    const res = await fetch(`${url}/api/song/add`, {
+      body: JSON.stringify({
+        songlink: e.target.songlink.value,
+        id: roomId,
+        username: e.target.username.value,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      method: "post",
+    });
+
+    /**
+     * Add Cookie to the browser
+     * Check if the URL is an actual spotify url
+     */
+
+    const result = await res.json();
+    if (result.created === true) {
+      swal({
+        icon: "success",
+        text: "The Song has been successfully added",
+        title: "Successfully added the Song",
+      });
+    } else {
+      swal({
+        icon: "error",
+        text: "There was an internal error while adding the song...",
+        title: "Error while adding the Song",
+      });
+    }
+
+    setInterval(() => {
+      router.reload();
+    }, 4000);
+  };
+
   return (
     <div className={styles.container}>
       <Head>
@@ -13,89 +56,57 @@ export default function Queue() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
           <div>
-            <img
-              className="mx-auto h-12 w-auto"
-              src="https://tailwindui.com/img/logos/workflow-mark-indigo-600.svg"
-              alt="Workflow"
-            />
             <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-              Sign in to your account
+              Add a Song
             </h2>
             <p className="mt-2 text-center text-sm text-gray-600">
-              Or{" "}
-              <a
-                href="#"
-                className="font-medium text-indigo-600 hover:text-indigo-500"
-              >
-                start your 14-day free trial
-              </a>
+              Room Id: {roomId}
             </p>
           </div>
-          <form className="mt-8 space-y-6" action="#" method="POST">
+          <form
+            className="mt-8 space-y-6"
+            action="#"
+            onSubmit={addSong}
+            method="POST"
+          >
             <input type="hidden" name="remember" defaultValue="true" />
             <div className="rounded-md shadow-sm -space-y-px">
               <div>
-                <label htmlFor="email-address" className="sr-only">
-                  Email address
+                <label htmlFor="songlink" className="sr-only">
+                  Sonnglink
                 </label>
                 <input
-                  id="email-address"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
+                  id="songlink"
+                  name="songlink"
+                  type="text"
+                  autoComplete="songlink"
                   required
                   className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                  placeholder="Email address"
+                  placeholder="Songlink"
                 />
               </div>
+              <br />
               <div>
-                <label htmlFor="password" className="sr-only">
-                  Password
+                <label htmlFor="username" className="sr-only">
+                  Username
                 </label>
                 <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
+                  id="username"
+                  name="username"
+                  type="text"
+                  autoComplete="username"
                   required
                   className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                  placeholder="Password"
+                  placeholder="Username"
                 />
               </div>
             </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember_me"
-                  name="remember_me"
-                  type="checkbox"
-                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                />
-                <label
-                  htmlFor="remember_me"
-                  className="ml-2 block text-sm text-gray-900"
-                >
-                  Remember me
-                </label>
-              </div>
-
-              <div className="text-sm">
-                <a
-                  href="#"
-                  className="font-medium text-indigo-600 hover:text-indigo-500"
-                >
-                  Forgot your password?
-                </a>
-              </div>
-            </div>
-
             <div>
               <button
                 type="submit"
                 className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
-                Sign in
+                ADD
               </button>
             </div>
           </form>
