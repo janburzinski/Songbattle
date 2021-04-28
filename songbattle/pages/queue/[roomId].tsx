@@ -11,9 +11,20 @@ export default function Queue() {
   const addSong = async (e) => {
     e.preventDefault();
 
+    const songLink = e.target.songlink.value;
+
+    if (!songLink.includes("https://open.spotify.com/track/")) {
+      swal({
+        icon: "error",
+        text: "The Songlink needs to be a Spotify Link",
+        title: "Songlink not from Spotify",
+      });
+      return;
+    }
+
     const res = await fetch(`${url}/api/song/add`, {
       body: JSON.stringify({
-        songlink: e.target.songlink.value,
+        songlink: songLink,
         id: roomId,
         username: e.target.username.value,
       }),
