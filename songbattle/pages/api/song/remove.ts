@@ -20,6 +20,16 @@ export default async (req: VercelRequest, res: VercelResponse) => {
   /*await db.query(
     "CREATE TABLE songs(id varchar(400) UNIQUE, songlink varchar(400), username varchar(400), votes integer)"
   );*/
+
+  let songCount = 0;
+
+  await db
+    .query("SELECT * FROM songs WHERE id=$1", [id])
+    .then((a) => {
+      songCount = a.rowCount;
+    })
+    .catch((err) => res.status(400).send({ added: false, message: err.stack }));
+
   await db
     .query("DELETE FROM songs WHERE songlink=$1 AND id=$2", [songlink, id])
     .then((a) => {
@@ -27,7 +37,7 @@ export default async (req: VercelRequest, res: VercelResponse) => {
         res.send({ error: true, message: "Room or song not found" });
         return;
       }
-      res.send({ deleted: true });
+      res.send({ deleted: true, songCount: songCount - 1 });
     })
     .catch((err) => res.status(400).send({ added: false, message: err.stack }));
 };
