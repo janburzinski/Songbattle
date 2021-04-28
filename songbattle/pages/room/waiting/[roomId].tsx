@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import useSWR from "swr";
 import fetch from "../../../utils/fetch";
 import { url } from "../../../utils/consts";
+import swal from "sweetalert";
 
 export default function Home() {
   const router = useRouter();
@@ -42,6 +43,18 @@ export default function Home() {
             <button
               type="submit"
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              onClick={() => {
+                if (data.info >= 2) {
+                  router.push("/room/play/" + roomId);
+                } else {
+                  swal({
+                    icon: "error",
+                    text:
+                      "There has to be more then 2 songs in the Queue to start...",
+                    title: "Not enough songs in queue",
+                  });
+                }
+              }}
             >
               START
             </button>
