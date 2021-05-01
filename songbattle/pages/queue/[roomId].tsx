@@ -4,12 +4,32 @@ import { useRouter } from "next/router";
 import { url } from "../../utils/consts";
 import swal from "sweetalert";
 
-export default function Queue() {
+export default function Queue({ exist }) {
   const router = useRouter();
   const { roomId } = router.query;
 
+  if (!exist) {
+    swal({
+      icon: "error",
+      text: "The Room does not exist",
+      title: "Room not found",
+      buttons: [false],
+      closeOnClickOutside: false,
+      closeOnEsc: false,
+    });
+  }
+
   const addSong = async (e) => {
     e.preventDefault();
+
+    if (!exist) {
+      swal({
+        icon: "error",
+        text: "The Room does not exist",
+        title: "Room not found",
+      });
+      return;
+    }
 
     const songLink = e.target.songlink.value;
 
@@ -40,7 +60,7 @@ export default function Queue() {
      */
 
     const result = await res.json();
-    if (result.created === true) {
+    if (result.added === true) {
       swal({
         icon: "success",
         text: "The Song has been successfully added",
@@ -49,14 +69,10 @@ export default function Queue() {
     } else {
       swal({
         icon: "error",
-        text: "There was an internal error while adding the song...",
+        text: result.message,
         title: "Error while adding the Song",
       });
     }
-
-    setInterval(() => {
-      router.reload();
-    }, 4000);
   };
 
   return (
@@ -126,3 +142,17 @@ export default function Queue() {
     </div>
   );
 }
+
+Queue.getInitialProps = async (ctx) => {
+  const res = await fetch(`${url}/api/room/exist/` + ctx.query.roomId, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+    method: "get",
+  });
+
+  const result = await res.json();
+  return {
+    exist: result.exist,
+  };
+};

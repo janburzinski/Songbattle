@@ -2,16 +2,26 @@ import Head from "next/head";
 import styles from "../../../styles/Home.module.css";
 import { useRouter } from "next/router";
 import useSWR from "swr";
-import fetch from "../../../utils/fetch";
+import fetcher from "../../../utils/fetch";
 import { url } from "../../../utils/consts";
 import swal from "sweetalert";
 
-export default function Home() {
+export default function Home({ exist }) {
   const router = useRouter();
   const roomId = typeof window !== "undefined" ? router.query.roomId : "0";
+
+  if (!exist) {
+    swal({
+      icon: "error",
+      text: "The Room does not exist",
+      title: "Room not found",
+    });
+    router.push("/");
+  }
+
   const { data, error } = useSWR<{ info: number }>(
     url + "/api/song/amount/" + roomId,
-    fetch,
+    fetcher,
     { refreshInterval: 30 }
   );
   return (
@@ -64,3 +74,17 @@ export default function Home() {
     </div>
   );
 }
+
+Home.getInitialProps = async (ctx) => {
+  const res = await fetch(`${url}/api/room/exist/` + ctx.query.roomId, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+    method: "get",
+  });
+
+  const result = await res.json();
+  return {
+    exist: result.exist,
+  };
+};

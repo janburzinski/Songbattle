@@ -22,16 +22,23 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     "CREATE TABLE songs(id varchar(400), songlink varchar(400), username varchar(400))"
   );*/
 
-  /**
-   * TODO: Check if Room actually exists
-   */
-
-  await db
-    .query("INSERT INTO songs(id, songlink, username) VALUES($1,$2,$3)", [
-      id,
-      songLink,
-      username,
-    ])
-    .then(() => res.send({ created: true }))
-    .catch((err) => res.status(400).send({ added: false, message: err.stack }));
+  db.query("SELECT * FROM room WHERE id=$1", [id], (err, r) => {
+    if (err) {
+      res.status(400).send({ added: false, message: "Room does not exist!" });
+      return;
+    }
+    if (r.rowCount >= 1) {
+      db.query("INSERT INTO songs(id, songlink, username) VALUES($1,$2,$3)", [
+        id,
+        songLink,
+        username,
+      ])
+        .then(() => res.send({ added: true }))
+        .catch((err) =>
+          res.status(400).send({ added: false, message: err.stack })
+        );
+      return;
+    }
+    res.status(400).send({ added: false, message: "Room does not exist!" });
+  });
 };
