@@ -28,12 +28,24 @@ export default async (req: VercelRequest, res: VercelResponse) => {
       return;
     }
     if (r.rowCount >= 1) {
-      db.query("INSERT INTO songs(id, songlink, username) VALUES($1,$2,$3)", [
+      db.query("SELECT * FROM songs WHERE id=$1 AND songlink=$2", [
         id,
         songLink,
-        username,
       ])
-        .then(() => res.send({ added: true }))
+        .then((r) => {
+          if (r.rowCount >= 1) {
+            res.send({ added: true });
+            return;
+          }
+          db.query(
+            "INSERT INTO songs(id, songlink, username) VALUES($1,$2,$3)",
+            [id, songLink, username]
+          )
+            .then(() => res.send({ added: true }))
+            .catch((err) =>
+              res.status(400).send({ added: false, message: err.stack })
+            );
+        })
         .catch((err) =>
           res.status(400).send({ added: false, message: err.stack })
         );
