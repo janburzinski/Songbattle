@@ -46,7 +46,7 @@ export default function Home() {
       router.push("/room/win/" + roomId);
       return;
     }
-    router.push("/room/play/" + roomId);
+    router.reload();
   };
 
   const voteForSong2 = async (e) => {
