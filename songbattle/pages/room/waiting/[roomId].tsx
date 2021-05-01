@@ -46,7 +46,6 @@ export default function Home({ exist }) {
             <a
               href={url + "/queue/" + roomId}
               className="mt-6 text-center text-1xl font-extrabold text-gray-400"
-              style={{ paddingLeft: "13%" }}
             >
               {url + "/queue/" + roomId}
             </a>
