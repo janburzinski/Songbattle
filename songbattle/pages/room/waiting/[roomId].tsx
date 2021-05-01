@@ -1,5 +1,4 @@
 import Head from "next/head";
-import styles from "../../../styles/Home.module.css";
 import { useRouter } from "next/router";
 import useSWR from "swr";
 import fetcher from "../../../utils/fetch";
@@ -8,7 +7,7 @@ import swal from "sweetalert";
 
 export default function Home({ exist }) {
   const router = useRouter();
-  const roomId = typeof window !== "undefined" ? router.query.roomId : "0";
+  const roomId = router.query.roomId;
 
   if (!exist) {
     swal({
@@ -25,28 +24,29 @@ export default function Home({ exist }) {
     { refreshInterval: 30 }
   );
   return (
-    <div className={styles.container}>
+    <div className="dark:bg-gray-800">
       <Head>
         <title>Songbattle - Waiting for songs...</title>
       </Head>
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 dark:bg-gray-800">
         <div className="max-w-md w-full space-y-8">
           <div>
             {data ? (
-              <p className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+              <p className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
                 {data.info}
               </p>
             ) : (
-              <p className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+              <p className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
                 Loading...
               </p>
             )}
-            <p className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            <p className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
               Waiting for songs...
             </p>
             <a
               href={url + "/queue/" + roomId}
               className="mt-6 text-center text-1xl font-extrabold text-gray-400"
+              style={{ paddingLeft: "13%" }}
             >
               {url + "/queue/" + roomId}
             </a>

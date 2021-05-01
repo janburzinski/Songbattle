@@ -72,15 +72,25 @@ export default function Home() {
   };
 
   return (
-    <div className={styles.container}>
+    <div
+      className="dark:bg-gray-800"
+      style={{
+        minHeight: "100vh",
+        padding: "0 0.5rem",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
       <Head>
         <title>Songbattle - Playing</title>
       </Head>
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 dark:bg-gray-800">
         <div className="max-w-md w-full space-y-8">
           <div>
             {data ? (
-              <p className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+              <p className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
                 <iframe
                   src={"https://open.spotify.com/embed/track/" + songLink1}
                   width="300"
@@ -112,7 +122,7 @@ export default function Home() {
                 </button>
               </p>
             ) : (
-              <p className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+              <p className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
                 Loading...
               </p>
             )}
