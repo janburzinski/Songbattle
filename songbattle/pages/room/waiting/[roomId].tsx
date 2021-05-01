@@ -54,8 +54,15 @@ export default function Home({ exist }) {
               type="submit"
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               onClick={() => {
-                if (data.info >= 2) {
+                if (data.info >= 2 && data.info % 2 === 0) {
                   router.push("/room/play/" + roomId);
+                } else if (data.info >= 2 && !(data.info % 2 === 0)) {
+                  swal({
+                    icon: "error",
+                    text:
+                      "There has to be a number of songs in the queue that is divisible by 2",
+                    title: "Not enough songs in queue",
+                  });
                 } else {
                   swal({
                     icon: "error",
