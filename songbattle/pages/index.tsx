@@ -1,6 +1,7 @@
 import Head from "next/head";
 import { url } from "../utils/consts";
 import { useRouter } from "next/router";
+import styles from "../styles/Home.module.css";
 
 export default function Home() {
   const router = useRouter();
@@ -67,6 +68,19 @@ export default function Home() {
           </form>
         </div>
       </div>
+      <footer className={styles.footer}>
+        <a
+          href="https://github.com/Urento/Songbattle"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <img
+            src="/GitHub-Mark-Light-120px-plus.png"
+            alt="Github Logo"
+            className={styles.logo}
+          />
+        </a>
+      </footer>
     </div>
   );
 }
