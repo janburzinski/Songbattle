@@ -30,7 +30,7 @@ export default function Home() {
 
     const res = await fetch(`${url}/api/room/freeplay/start`, {
       body: JSON.stringify({
-        owner: "freeplay-" + generateId,
+        owner: "freeplay-" + generateId(),
       }),
       headers: {
         "Content-Type": "application/json",

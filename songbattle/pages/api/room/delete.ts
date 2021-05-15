@@ -3,13 +3,12 @@ import { connectToDb } from "../../../utils/connectToDb";
 
 export default async (req: VercelRequest, res: VercelResponse) => {
   const id = req.body.id;
-  const owner = req.body.owner;
 
   /**
    * Todo: Define Request Method (if possible) and maybe add some form of authentication
    */
 
-  if (typeof id !== "string" || typeof owner !== "string") {
+  if (typeof id !== "string") {
     res.status(400).send({
       added: false,
       message: "Bad Input",
@@ -19,13 +18,30 @@ export default async (req: VercelRequest, res: VercelResponse) => {
   const db = await connectToDb();
 
   await db
-    .query("DELETE FROM room WHERE id=$1 AND owner=$2", [id, owner])
-    .then((r) => {
-      if (r.rowCount <= 0) {
-        res.send({ error: true, message: "Room not found" });
+    .query("SELECT * FROM songs WHERE id=$1", [id])
+    .then((a) => {
+      if (a.rowCount <= 1) {
+        db.query("DELETE FROM room WHERE id=$1", [id])
+          .then((r) => {
+            if (a.rowCount <= 0) {
+              res.send({ deleted: false, message: "Room not found!" });
+              return;
+            }
+            res.send({ deleted: true, id: id });
+          })
+          .catch((err) =>
+            res
+              .status(400)
+              .send({ deleted: false, error: true, message: err.stack })
+          );
         return;
       }
-      res.send({ deleted: true, id: id });
+      res.status(400).send({
+        error: true,
+        message: "There are too many songs still in the queue!",
+      });
     })
-    .catch((err) => res.status(400).send({ added: false, message: err.stack }));
+    .catch((err) =>
+      res.status(400).send({ deleted: false, error: true, message: err.stack })
+    );
 };

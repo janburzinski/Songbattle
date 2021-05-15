@@ -1,14 +1,15 @@
 import Head from "next/head";
 import { useRouter } from "next/router";
 import useSWR from "swr";
-import fetch from "../../../utils/fetch";
+import fetcher from "../../../utils/fetch";
 import { url } from "../../../utils/consts";
+import swal from "sweetalert";
 
 export default function Home({ roomId }) {
   const router = useRouter();
   const { data, error } = useSWR<{ info: any[] }>(
     url + "/api/song/queue/" + roomId,
-    fetch
+    fetcher
   );
   let songLink = "";
   if (data) {
@@ -17,6 +18,28 @@ export default function Home({ roomId }) {
       ""
     );
   }
+
+  // Delete the room
+  const deleteRoom = async () => {
+    const res = await fetch(`${url}/api/room/delete`, {
+      body: JSON.stringify({ id: roomId }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      method: "delete",
+    });
+
+    const result = await res.json();
+    if (result.deleted === false) {
+      swal({
+        icon: "error",
+        text: result.message,
+        title: "Error while deleting this room!",
+      });
+      return;
+    }
+  };
+  deleteRoom();
 
   const playAgain = () => {
     router.push("../../../");
