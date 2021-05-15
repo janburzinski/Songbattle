@@ -5,9 +5,8 @@ import fetcher from "../../../utils/fetch";
 import { url } from "../../../utils/consts";
 import swal from "sweetalert";
 
-export default function Home({ exist }) {
+export default function Home({ exist, roomId }) {
   const router = useRouter();
-  const roomId = router.query.roomId;
 
   if (!exist) {
     swal({
@@ -58,15 +57,13 @@ export default function Home({ exist }) {
                 } else if (data.info >= 2 && !(data.info % 2 === 0)) {
                   swal({
                     icon: "error",
-                    text:
-                      "There has to be a number of songs in the queue that is divisible by 2",
+                    text: "There has to be a number of songs in the queue that is divisible by 2",
                     title: "Not enough songs in queue",
                   });
                 } else {
                   swal({
                     icon: "error",
-                    text:
-                      "There has to be more then 2 songs in the Queue to start...",
+                    text: "There has to be more then 2 songs in the Queue to start...",
                     title: "Not enough songs in queue",
                   });
                 }
@@ -92,5 +89,6 @@ Home.getInitialProps = async (ctx) => {
   const result = await res.json();
   return {
     exist: result.exist,
+    roomId: ctx.query.roomId,
   };
 };

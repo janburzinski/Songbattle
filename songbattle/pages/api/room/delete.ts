@@ -17,9 +17,7 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     return;
   }
   const db = await connectToDb();
-  /*await db.query(
-    "CREATE TABLE room(id varchar(400) UNIQUE, owner varchar(400))"
-  );*/
+
   await db
     .query("DELETE FROM room WHERE id=$1 AND owner=$2", [id, owner])
     .then((r) => {

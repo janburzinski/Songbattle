@@ -1,5 +1,5 @@
 import Head from "next/head";
-import { url } from "../utils/consts";
+import { generateId, url } from "../utils/consts";
 import { useRouter } from "next/router";
 import styles from "../styles/Home.module.css";
 
@@ -23,6 +23,28 @@ export default function Home() {
 
     const result = await res.json();
     router.push("/room/waiting/" + result.id);
+  };
+
+  const startFreeplay = async (e) => {
+    e.preventDefault();
+
+    const res = await fetch(`${url}/api/room/freeplay/start`, {
+      body: JSON.stringify({
+        owner: "freeplay-" + generateId,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      method: "post",
+    });
+
+    /**
+     * Add Cookie to the browser
+     */
+
+    const result = await res.json();
+    console.log(result.id);
+    router.push("/room/play/" + result.id);
   };
 
   return (
@@ -63,6 +85,13 @@ export default function Home() {
                 className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
                 CREATE
+              </button>
+              <br />
+              <button
+                onClick={startFreeplay}
+                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                FREEPLAY
               </button>
             </div>
           </form>

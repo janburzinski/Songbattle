@@ -153,5 +153,6 @@ Queue.getInitialProps = async (ctx) => {
   const result = await res.json();
   return {
     exist: result.exist,
+    roomId: ctx.query.roomId,
   };
 };

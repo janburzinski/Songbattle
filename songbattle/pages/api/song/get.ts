@@ -12,9 +12,7 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     return;
   }
   const db = await connectToDb();
-  /*await db.query(
-    "CREATE TABLE songs(id varchar(400) UNIQUE, songlink varchar(400), username varchar(400))"
-  );*/
+
   await db
     .query("SELECT * FROM songs WHERE id=$1", [id])
     .then((r) => res.send({ info: r.rows }))

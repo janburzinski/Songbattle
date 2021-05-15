@@ -1,9 +1,6 @@
 import { VercelRequest, VercelResponse } from "@vercel/node";
 import { connectToDb } from "../../../utils/connectToDb";
-
-const generateId = () => {
-  return Math.random().toString(36).substr(2, 9);
-};
+import { generateId } from "../../../utils/consts";
 
 export default async (req: VercelRequest, res: VercelResponse) => {
   const owner = req.body.owner;

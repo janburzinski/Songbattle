@@ -4,9 +4,8 @@ import useSWR from "swr";
 import fetch from "../../../utils/fetch";
 import { url } from "../../../utils/consts";
 
-export default function Home() {
+export default function Home({ roomId }) {
   const router = useRouter();
-  const roomId = typeof window !== "undefined" ? router.query.roomId : "0";
   const { data, error } = useSWR<{ info: any[] }>(
     url + "/api/song/queue/" + roomId,
     fetch
@@ -74,3 +73,12 @@ export default function Home() {
     </div>
   );
 }
+
+export const getServerSideProps = async (ctx) => {
+  const { roomId } = ctx.query;
+  return {
+    props: {
+      roomId,
+    },
+  };
+};
