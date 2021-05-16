@@ -29,7 +29,12 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     "https://open.spotify.com/track/40mjsnRjCpycdUw3xhS20g?si=1c036513fba5482d",
     "https://open.spotify.com/track/4G8SyOXJeXXzi3u9xT9GUx?si=a73546b7f4ab4547",
     "https://open.spotify.com/track/43PGPuHIlVOc04jrZVh9L6?si=74892a7d6cc8466d",
+    "https://open.spotify.com/track/21UkXrc9kD48rNpTMI2ecz?si=d08fb6088c1441b2",
+    "https://open.spotify.com/track/5kMCBppYo4eaAXlvOBj6Ti?si=ac5f8746a40f404f",
+    "https://open.spotify.com/track/6uvMKqNlrSvcC4NaKnrwjZ?si=ec628b68f4494ce8",
+    "https://open.spotify.com/track/0SiddXSHfp3rXlwLWHi5z6?si=d2faa0acf8fc4a91",
   ];
+  const randomPickedSongs = songs.sort(() => 0.5 - Math.random()).slice(0, 10);
 
   await db
     .query("INSERT INTO room(id, owner) VALUES($1,$2)", [id, owner])
@@ -44,10 +49,10 @@ export default async (req: VercelRequest, res: VercelResponse) => {
       return;
     }
     if (r.rowCount >= 1) {
-      for (let i = 0; i < songs.length; i++) {
+      for (let i = 0; i < randomPickedSongs.length; i++) {
         db.query("INSERT INTO songs(id, songlink, username) VALUES($1,$2,$3)", [
           id,
-          songs[i],
+          randomPickedSongs[i],
           owner,
         ]);
       }
