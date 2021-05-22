@@ -53,11 +53,6 @@ export default function Queue({ exist }) {
       method: "post",
     });
 
-    /**
-     * Add Cookie to the browser
-     * Check if the URL is an actual spotify url
-     */
-
     const result = await res.json();
     if (result.added === true) {
       swal({

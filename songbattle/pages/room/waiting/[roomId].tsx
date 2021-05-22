@@ -5,17 +5,17 @@ import fetcher from "../../../utils/fetch";
 import { url } from "../../../utils/consts";
 import swal from "sweetalert";
 
-export default function Home({ exist, roomId }) {
+export default function Home({ roomId }) {
   const router = useRouter();
 
-  if (!exist) {
+  /*if (!exist) {
     swal({
       icon: "error",
       text: "The Room does not exist",
       title: "Room not found",
     });
     router.push("/");
-  }
+  }*/
 
   const { data, error } = useSWR<{ info: number }>(
     url + "/api/song/amount/" + roomId,
@@ -79,16 +79,22 @@ export default function Home({ exist, roomId }) {
 }
 
 Home.getInitialProps = async (ctx) => {
-  const res = await fetch(`${url}/api/room/exist/` + ctx.query.roomId, {
-    headers: {
-      "Content-Type": "application/json",
-    },
-    method: "get",
-  });
+  const res = await fetch(
+    `${url}/api/room/exist/` + ctx.query.roomId + "/secure",
+    {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      method: "get",
+    }
+  );
 
   const result = await res.json();
-  return {
-    exist: result.exist,
-    roomId: ctx.query.roomId,
-  };
+  if (!result.exist && ctx.res) {
+    ctx.res.writeHead(301, { Location: "/" });
+    ctx.res.end();
+  }
+
+  return { roomId: ctx.query.roomId };
 };

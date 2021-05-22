@@ -5,6 +5,7 @@ import { generateId } from "../../../../utils/consts";
 export default async (req: VercelRequest, res: VercelResponse) => {
   const owner = req.body.owner;
   const id = generateId();
+  const secretId = generateId();
 
   /**
    * Todo: Define Request Method (if possible) and maybe add some form of authentication
@@ -37,10 +38,14 @@ export default async (req: VercelRequest, res: VercelResponse) => {
   const randomPickedSongs = songs.sort(() => 0.5 - Math.random()).slice(0, 10);
 
   await db
-    .query("INSERT INTO room(id, owner) VALUES($1,$2)", [id, owner])
+    .query("INSERT INTO room(id, owner, secretid) VALUES($1,$2,$3)", [
+      id,
+      owner,
+      secretId,
+    ])
     .catch((err) => res.status(400).send({ added: false, message: err.stack }));
 
-  await db.query("SELECT * FROM room WHERE id=$1", [id], (err, r) => {
+  db.query("SELECT owner FROM room WHERE id=$1", [id], (err, r) => {
     if (err) {
       res.status(400).send({
         added: false,
@@ -56,7 +61,7 @@ export default async (req: VercelRequest, res: VercelResponse) => {
           owner,
         ]);
       }
-      res.send({ id: id, created: true });
+      res.send({ id: id, created: true, secretId: secretId });
       return;
     }
     res.status(400).send({ added: false, message: "Room does not exist!" });

@@ -2,11 +2,13 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import useSWR from "swr";
 import fetcher from "../../../utils/fetch";
-import { url } from "../../../utils/consts";
+import { parseCookies, url } from "../../../utils/consts";
 import swal from "sweetalert";
+import { useCookies } from "react-cookie";
 
 export default function Home({ roomId }) {
   const router = useRouter();
+  const [_cookies, _setCookie, removeCookie] = useCookies(["user"]);
   const { data, error } = useSWR<{ info: any[] }>(
     url + "/api/song/queue/" + roomId,
     fetcher
@@ -26,6 +28,7 @@ export default function Home({ roomId }) {
       headers: {
         "Content-Type": "application/json",
       },
+      credentials: "include",
       method: "delete",
     });
 
@@ -45,6 +48,8 @@ export default function Home({ roomId }) {
     router.push("../../../");
     return;
   };
+
+  removeCookie("user", { path: "/", sameSite: true });
 
   return (
     <div
@@ -97,11 +102,16 @@ export default function Home({ roomId }) {
   );
 }
 
-export const getServerSideProps = async (ctx) => {
+Home.getInitialProps = async (ctx) => {
   const { roomId } = ctx.query;
+  const cookie = parseCookies(ctx.req);
+  if (ctx.res) {
+    if (Object.keys(cookie).length === 0 && cookie.constructor === Object) {
+      ctx.res.writeHead(301, { Location: "/" });
+      ctx.res.end();
+    }
+  }
   return {
-    props: {
-      roomId,
-    },
+    roomId,
   };
 };

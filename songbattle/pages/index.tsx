@@ -2,35 +2,39 @@ import Head from "next/head";
 import { generateId, url } from "../utils/consts";
 import { useRouter } from "next/router";
 import styles from "../styles/Home.module.css";
+import { useCookies } from "react-cookie";
 
 export default function Home() {
   const router = useRouter();
+  const [cookie, setCookie] = useCookies(["user"]);
 
   const createRoom = async (e) => {
     e.preventDefault();
+    const username = e.target.username.value;
 
     const res = await fetch(`${url}/api/room/create`, {
-      body: JSON.stringify({ owner: e.target.username.value }),
+      body: JSON.stringify({ owner: username }),
       headers: {
         "Content-Type": "application/json",
       },
       method: "post",
     });
-
-    /**
-     * Add Cookie to the browser
-     */
-
     const result = await res.json();
+    setCookie("user", result.secretId, {
+      path: "/",
+      maxAge: 3600, //should be 1 hours or something like that
+      sameSite: true,
+    });
     router.push("/room/waiting/" + result.id);
   };
 
   const startFreeplay = async (e) => {
     e.preventDefault();
+    const id = generateId();
 
     const res = await fetch(`${url}/api/room/freeplay/start`, {
       body: JSON.stringify({
-        owner: "freeplay-" + generateId(),
+        owner: "freeplay-" + id,
       }),
       headers: {
         "Content-Type": "application/json",
@@ -38,12 +42,13 @@ export default function Home() {
       method: "post",
     });
 
-    /**
-     * Add Cookie to the browser
-     */
-
     const result = await res.json();
-    console.log(result.id);
+    // Add Cookie for auth
+    setCookie("user", result.secretId, {
+      path: "/",
+      maxAge: 3600, //should be 1 hours or something like that
+      sameSite: true,
+    });
     router.push("/room/play/" + result.id);
   };
 

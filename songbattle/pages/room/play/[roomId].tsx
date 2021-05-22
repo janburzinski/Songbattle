@@ -2,12 +2,10 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import useSWR from "swr";
 import fetcher from "../../../utils/fetch";
-import { url } from "../../../utils/consts";
+import { parseCookies, url } from "../../../utils/consts";
 
 export default function Home({ roomId }) {
   const router = useRouter();
-  //  const roomId =
-  //    typeof window !== "undefined" ? router.query.roomId : "345345345345";
   const { data, error } = useSWR<{ info: any[] }>(
     url + "/api/song/queue/" + roomId,
     fetcher
@@ -70,7 +68,7 @@ export default function Home({ roomId }) {
       router.push("/room/win/" + roomId);
       return;
     }
-    router.push("/room/play/" + roomId);
+    router.reload();
   };
 
   return (
@@ -135,11 +133,26 @@ export default function Home({ roomId }) {
   );
 }
 
-export const getServerSideProps = async (ctx) => {
+Home.getInitialProps = async (ctx) => {
   const { roomId } = ctx.query;
-  return {
-    props: {
-      roomId,
+  const cookie = parseCookies(ctx.req);
+
+  //check if the cookie is valid and redirect if not
+  const res = await fetch(`${url}/api/room/exist/` + roomId + "/secure", {
+    headers: {
+      "Content-Type": "application/json",
     },
+    credentials: "include",
+    method: "get",
+  });
+
+  const result = await res.json();
+  if (!result.exist && ctx.res && !(typeof window === "undefined")) {
+    ctx.res.writeHead(301, { Location: "/" });
+    ctx.res.end();
+  }
+
+  return {
+    roomId,
   };
 };
