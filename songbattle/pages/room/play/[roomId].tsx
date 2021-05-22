@@ -63,6 +63,10 @@ export default function Home({ roomId }) {
     });
 
     const result = await res.json();
+    if (result.message === "Room or song not found") {
+      router.reload();
+      return;
+    }
     if (result.songCount <= 1) {
       //delete room
       router.push("/room/win/" + roomId);
