@@ -33,9 +33,6 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     //check if the room exists normally
   } else {
     // check if the user has the right cookie
-    const userCookie = req.cookies.user;
-    if (userCookie === null || userCookie === "undefined")
-      return res.status(200).send({ exist: false });
     db.query("SELECT owner FROM room WHERE id=$1", [id], (err, r) => {
       if (err || r.rowCount <= 0) {
         return res.status(200).send({ exist: false });
