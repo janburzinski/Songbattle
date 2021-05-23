@@ -11,7 +11,8 @@ export default function Home({ roomId }) {
   const [_cookies, _setCookie, removeCookie] = useCookies(["user"]);
   const { data, error } = useSWR<{ info: any[] }>(
     url + "/api/song/queue/" + roomId,
-    fetcher
+    fetcher,
+    { revalidateOnFocus: false, revalidateOnReconnect: false }
   );
   let songLink = "";
   if (data) {
