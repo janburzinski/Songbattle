@@ -1,15 +1,13 @@
 import Head from "next/head";
 import { useRouter } from "next/router";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 import fetcher from "../../../utils/fetch";
 import { parseCookies, url } from "../../../utils/consts";
 
 export default function Home({ roomId }) {
   const router = useRouter();
-  const { data, error } = useSWR<{ info: any[] }>(
-    url + "/api/song/queue/" + roomId,
-    fetcher
-  );
+  const apiURL = `${url}/api/song/queue/${roomId}`;
+  const { data, error } = useSWR<{ info: any[] }>(apiURL, fetcher);
   let songLink1 = "https://open.spotify.com/embed/track/1pGlbknNqHchwYzHh3ffJj";
   let songLink2 = "https://open.spotify.com/embed/track/1pGlbknNqHchwYzHh3ffJj";
 
@@ -39,14 +37,14 @@ export default function Home({ roomId }) {
 
     const result = await res.json();
     if (result.message === "Room or song not found") {
-      router.reload();
+      mutate(apiURL);
       return;
     }
     if (result.songCount <= 1) {
       router.push("/room/win/" + roomId);
       return;
     }
-    router.reload();
+    mutate(apiURL);
   };
 
   const voteForSong2 = async (e) => {
@@ -64,7 +62,7 @@ export default function Home({ roomId }) {
 
     const result = await res.json();
     if (result.message === "Room or song not found") {
-      router.reload();
+      mutate(apiURL);
       return;
     }
     if (result.songCount <= 1) {
@@ -72,7 +70,7 @@ export default function Home({ roomId }) {
       router.push("/room/win/" + roomId);
       return;
     }
-    router.reload();
+    mutate(apiURL);
   };
 
   return (
