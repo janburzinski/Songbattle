@@ -57,7 +57,7 @@ export default function Home({ roomId }) {
       headers: {
         "Content-Type": "application/json",
       },
-      method: "post",
+      method: "delete",
     });
 
     const result = await res.json();
