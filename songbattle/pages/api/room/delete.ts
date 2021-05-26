@@ -26,9 +26,11 @@ export default async (req: VercelRequest, res: VercelResponse) => {
             .then((r) => {
               if (a.rowCount <= 0) {
                 res.send({ deleted: false, message: "Room not found!" });
+                res.end();
                 return;
               }
               res.send({ deleted: true, id: id });
+              res.end();
             })
             .catch((err) =>
               res
@@ -41,6 +43,7 @@ export default async (req: VercelRequest, res: VercelResponse) => {
           error: true,
           message: "There are too many songs still in the queue!",
         });
+        res.end();
         return;
       })
       .catch((err) =>

@@ -20,12 +20,11 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     /*await db.query(
       "CREATE TABLE room(id varchar(400) UNIQUE, owner varchar(400), secretid varchar(400))"
     );*/
-    await db
-      .query("INSERT INTO room(id, owner, secretid) VALUES($1,$2,$3)", [
-        id,
-        owner,
-        secretId,
-      ])
+    db.query("INSERT INTO room(id, owner, secretid) VALUES($1,$2,$3)", [
+      id,
+      owner,
+      secretId,
+    ])
       .then(() => res.send({ created: true, id: id, secretId: secretId }))
       .catch((err) =>
         res.status(400).send({ added: false, message: err.stack })

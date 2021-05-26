@@ -31,7 +31,7 @@ export default function Home({ roomId }) {
   const sendWinStat = async () => {
     if (!alreadySent) {
       const res = await fetch(`${url}/api/room/win`, {
-        body: JSON.stringify({ songUrl: data.info[0].songlink }),
+        body: JSON.stringify({ songUrl: data.info[0].songlink, id: roomId }),
         headers: {
           "Content-Type": "application/json",
         },

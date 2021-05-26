@@ -42,7 +42,7 @@ export default async (req: VercelRequest, res: VercelResponse) => {
               "INSERT INTO songs(id, songlink, username) VALUES($1,$2,$3)",
               [id, songLink, username]
             )
-              .then(() => res.send({ added: true }))
+              .then(() => res.status(200).send({ added: true }))
               .catch((err) =>
                 res.status(400).send({ added: false, message: err.stack })
               );
@@ -53,6 +53,8 @@ export default async (req: VercelRequest, res: VercelResponse) => {
         return;
       }
       res.status(400).send({ added: false, message: "Room does not exist!" });
+      res.end();
+      return;
     });
   }
 };
