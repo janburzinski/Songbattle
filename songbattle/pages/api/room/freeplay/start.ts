@@ -88,6 +88,16 @@ export default async (req: VercelRequest, res: VercelResponse) => {
         "https://open.spotify.com/track/0SiddXSHfp3rXlwLWHi5z6?si=d2faa0acf8fc4a91",
         owner,
       ],
+      [
+        id,
+        "https://open.spotify.com/track/0KBa4BiUHxQNrqsaDZzUG7?si=0c884ca86a3e4693",
+        owner,
+      ],
+      [
+        id,
+        "https://open.spotify.com/track/7HsjuVBM93Z2RoxjpWLgTT?si=c0d7768efd7048eb",
+        owner,
+      ],
     ];
     const randomPickedSongs = songs
       .sort(() => 0.5 - Math.random())

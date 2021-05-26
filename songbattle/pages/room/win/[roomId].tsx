@@ -12,7 +12,12 @@ export default function Home({ roomId }) {
   const { data, error } = useSWR<{ info: any[] }>(
     url + "/api/song/queue/" + roomId,
     fetcher,
-    { revalidateOnFocus: false, revalidateOnReconnect: false }
+    {
+      revalidateOnFocus: false,
+      revalidateOnMount: false,
+      revalidateOnReconnect: false,
+      refreshInterval: 0,
+    }
   );
   let songLink = "";
   if (data) {
@@ -21,6 +26,30 @@ export default function Home({ roomId }) {
       ""
     );
   }
+  let alreadySent = false;
+
+  const sendWinStat = async () => {
+    if (!alreadySent) {
+      const res = await fetch(`${url}/api/room/win`, {
+        body: JSON.stringify({ songUrl: data.info[0].songlink }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        method: "post",
+      });
+      const result = await res.json();
+      if (result.updated === false) {
+        swal({
+          icon: "error",
+          text: result.message,
+          title: "Error while updating the winning statistic!",
+        });
+        return;
+      }
+      alreadySent = true;
+    }
+  };
 
   // Delete the room
   const deleteRoom = async () => {
@@ -43,6 +72,7 @@ export default function Home({ roomId }) {
       return;
     }
   };
+  sendWinStat();
   deleteRoom();
 
   const playAgain = () => {

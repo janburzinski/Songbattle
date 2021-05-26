@@ -10,8 +10,9 @@ export default function Home({ roomId }) {
   const { data, error } = useSWR<{ info: any[] }>(apiURL, fetcher);
   let songLink1 = "https://open.spotify.com/embed/track/1pGlbknNqHchwYzHh3ffJj";
   let songLink2 = "https://open.spotify.com/embed/track/1pGlbknNqHchwYzHh3ffJj";
+  let alreadySet = false;
 
-  if (data) {
+  if (data && !alreadySet) {
     songLink1 = data.info[0].songlink.replace(
       "https://open.spotify.com/track/",
       ""
@@ -20,6 +21,7 @@ export default function Home({ roomId }) {
       data.info[1] !== null
         ? data.info[1].songlink.replace("https://open.spotify.com/track/", "")
         : "";
+    alreadySet = true;
   }
 
   const voteForSong1 = async (e) => {

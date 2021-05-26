@@ -19,8 +19,7 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     if (userCookie === null || userCookie === "undefined")
       return res.status(200).send({ deleted: false, error: true });*/
 
-    await db
-      .query("SELECT songlink FROM songs WHERE id=$1", [id])
+    db.query("SELECT songlink FROM songs WHERE id=$1", [id])
       .then((a) => {
         if (a.rowCount <= 1) {
           db.query("DELETE FROM room WHERE id=$1", [id])
@@ -42,6 +41,7 @@ export default async (req: VercelRequest, res: VercelResponse) => {
           error: true,
           message: "There are too many songs still in the queue!",
         });
+        return;
       })
       .catch((err) =>
         res
