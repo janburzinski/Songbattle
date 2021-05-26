@@ -3,9 +3,11 @@ import { useRouter } from "next/router";
 import useSWR, { mutate } from "swr";
 import fetcher from "../../../utils/fetch";
 import { parseCookies, url } from "../../../utils/consts";
+import { useState } from "react";
 
 export default function Home({ roomId }) {
   const router = useRouter();
+  const [processingVote, setProcessingVote] = useState(false);
   const apiURL = `${url}/api/song/queue/${roomId}`;
   const { data, error } = useSWR<{ info: any[] }>(apiURL, fetcher);
   let songLink1 = "https://open.spotify.com/embed/track/1pGlbknNqHchwYzHh3ffJj";
@@ -26,6 +28,8 @@ export default function Home({ roomId }) {
 
   const voteForSong1 = async (e) => {
     e.preventDefault();
+    //true
+    setProcessingVote(true);
 
     const s2 = data.info[1];
 
@@ -38,6 +42,8 @@ export default function Home({ roomId }) {
     });
 
     const result = await res.json();
+    //false
+    setProcessingVote(false);
     if (result.message === "Room or song not found") {
       mutate(apiURL);
       return;
@@ -51,6 +57,7 @@ export default function Home({ roomId }) {
 
   const voteForSong2 = async (e) => {
     e.preventDefault();
+    setProcessingVote(true);
 
     const s1 = data.info[0];
 
@@ -63,6 +70,7 @@ export default function Home({ roomId }) {
     });
 
     const result = await res.json();
+    setProcessingVote(false);
     if (result.message === "Room or song not found") {
       mutate(apiURL);
       return;
@@ -129,6 +137,13 @@ export default function Home({ roomId }) {
               <p className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
                 Loading...
               </p>
+            )}
+            {processingVote ? (
+              <p className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
+                Processing Vote...
+              </p>
+            ) : (
+              ""
             )}
           </div>
         </div>
