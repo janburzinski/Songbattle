@@ -2,7 +2,7 @@ import { VercelRequest, VercelResponse } from "@vercel/node";
 import { connectToDb } from "../../../utils/connectToDb";
 
 export default async (req: VercelRequest, res: VercelResponse) => {
-  if (req.method.toLowerCase() === "DELETE") {
+  if (req.method.toLowerCase() === "delete") {
     const id = req.body.id;
 
     if (typeof id !== "string") {
@@ -21,15 +21,17 @@ export default async (req: VercelRequest, res: VercelResponse) => {
 
     db.query("SELECT songlink FROM songs WHERE id=$1", [id])
       .then((a) => {
-        if (a.rowCount <= 1) {
+        if (a.rowCount >= 1) {
           db.query("DELETE FROM room WHERE id=$1", [id])
             .then((r) => {
-              if (a.rowCount <= 0) {
-                res.send({ deleted: false, message: "Room not found!" });
+              if (r.rowCount <= 0) {
+                res
+                  .status(200)
+                  .send({ deleted: false, message: "Room not found!" });
                 res.end();
                 return;
               }
-              res.send({ deleted: true, id: id });
+              res.status(200).send({ deleted: true, id: id });
               res.end();
             })
             .catch((err) =>
