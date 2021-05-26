@@ -3,6 +3,7 @@ import { generateId, url } from "../utils/consts";
 import { useRouter } from "next/router";
 import { useCookies } from "react-cookie";
 import { useState } from "react";
+import swal from "sweetalert";
 
 export default function Home() {
   const router = useRouter();
@@ -15,9 +16,17 @@ export default function Home() {
 
   const createRoom = async (e) => {
     e.preventDefault();
-    updateLoadingState();
     const username = e.target.username.value;
+    if (username === null || username === "") {
+      swal({
+        icon: "error",
+        text: "Username can not be null",
+        title: "Username has to be entered!",
+      });
+      return;
+    }
 
+    updateLoadingState();
     const res = await fetch(`${url}/api/room/create`, {
       body: JSON.stringify({ owner: username }),
       headers: {
@@ -95,7 +104,6 @@ export default function Home() {
                   name="username"
                   type="text"
                   autoComplete="username"
-                  required
                   className="dark:bg-gray-800 dark:text-white appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                   placeholder="Username"
                 />
@@ -118,6 +126,7 @@ export default function Home() {
                 </div>
                 <br />
                 <button
+                  type="button"
                   onClick={() => {
                     router.push("/stats");
                   }}
