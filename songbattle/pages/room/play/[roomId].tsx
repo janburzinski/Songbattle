@@ -43,15 +43,16 @@ export default function Home({ roomId }) {
 
     const result = await res.json();
     //false
-    setProcessingVote(false);
     if (result.message === "Room or song not found") {
       mutate(apiURL);
+      setProcessingVote(false);
       return;
     }
     if (result.songCount <= 1) {
       router.push("/room/win/" + roomId);
       return;
     }
+    setProcessingVote(false);
     mutate(apiURL);
   };
 

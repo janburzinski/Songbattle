@@ -1,28 +1,20 @@
 import Head from "next/head";
 import { url } from "../../utils/consts";
 import { useRouter } from "next/router";
-import { useCookies } from "react-cookie";
-import { useState } from "react";
 
 export default function Stats({ stats }) {
   const router = useRouter();
-  const [cookie, setCookie] = useCookies(["user"]);
-  const [loading, setLoading] = useState(true);
-
-  const updateLoadingState = () => {
-    setLoading(!loading);
-  };
 
   return (
     <div className="dark:bg-gray-800">
       <Head>
-        <title>Songbattle - Stats</title>
+        <title>Songbattle - Leaderboard</title>
       </Head>
       <div className="min-h-screen flex justify-center">
         <div className="max-w-md w-full space-y-8">
           <div>
             <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
-              Stats
+              Leaderboard
             </h2>
           </div>
           <div className="flex flex-col">
