@@ -38,6 +38,7 @@ export default async (req: VercelRequest, res: VercelResponse) => {
                     Number(wins) + 1,
                     songTitle,
                   ]);
+                  res.send({ updated: true })
                   res.end();
                   return;
                 } else {
