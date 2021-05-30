@@ -9,6 +9,7 @@ const updateRedis = async (redis: Redis, db: Client) => {
   db.query("SELECT * FROM stats ORDER BY wins DESC LIMIT 10").then(
     async (r) => {
       await redis.set("leaderboard", JSON.stringify(r.rows));
+      redis.disconnect();
     }
   );
 };
