@@ -9,7 +9,9 @@ export default function Home({ roomId }) {
   const router = useRouter();
   const [processingVote, setProcessingVote] = useState(false);
   const apiURL = `${url}/api/song/queue/${roomId}`;
-  const { data, error } = useSWR<{ info: any[] }>(apiURL, fetcher);
+  const { data, error } = useSWR<{ info: any[] }>(apiURL, fetcher, {
+    refreshInterval: 0,
+  });
   let songLink1 = "https://open.spotify.com/embed/track/1pGlbknNqHchwYzHh3ffJj";
   let songLink2 = "https://open.spotify.com/embed/track/1pGlbknNqHchwYzHh3ffJj";
   let alreadySet = false;

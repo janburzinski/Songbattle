@@ -4,6 +4,13 @@ import { useRouter } from "next/router";
 
 export default function Stats({ stats }) {
   const router = useRouter();
+  const truncate = (str: string, max: number, suffix: string): string =>
+    str.length < max
+      ? str
+      : `${str.substr(
+          0,
+          str.substr(0, max - suffix.length).lastIndexOf(" ")
+        )}${suffix}`;
 
   return (
     <div className="dark:bg-gray-800">
@@ -52,10 +59,10 @@ export default function Stats({ stats }) {
                               </div>
                               <div className="ml-4">
                                 <div className="text-sm font-medium text-gray-900">
-                                  {stat.songname}
+                                  {truncate(stat.songname, 65, "...")}
                                 </div>
                                 <div className="text-sm text-gray-500">
-                                  {stat.artist}
+                                  {truncate(stat.artist, 65, "...")}
                                 </div>
                               </div>
                             </div>

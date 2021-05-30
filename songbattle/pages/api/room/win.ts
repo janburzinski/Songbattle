@@ -1,6 +1,17 @@
 import { VercelRequest, VercelResponse } from "@vercel/node";
 import { connectToDb } from "../../../utils/connectToDb";
 import { getPreview } from "spotify-url-info";
+import { connectToRedis } from "../../../utils/connectToRedis";
+import { Client } from "pg";
+import { Redis } from "ioredis";
+
+const updateRedis = async (redis: Redis, db: Client) => {
+  db.query("SELECT * FROM stats ORDER BY wins DESC LIMIT 10").then(
+    async (r) => {
+      await redis.set("leaderboard", JSON.stringify(r.rows));
+    }
+  );
+};
 
 export default async (req: VercelRequest, res: VercelResponse) => {
   if (req.method.toLowerCase() === "post") {
@@ -15,9 +26,10 @@ export default async (req: VercelRequest, res: VercelResponse) => {
       return;
     }
     const db = await connectToDb();
+    const redis = await connectToRedis();
     /*await db.query("DROP TABLE stats");
     await db.query(
-      "CREATE TABLE stats(songname varchar(400), cover_img varchar(400), wins varchar(400), artist varchar(400))"
+      "CREATE TABLE stats(songname varchar(400), cover_img varchar(400), wins int, artist varchar(400), rankChange varchar(400))"
     );*/
 
     db.query("SELECT songlink FROM songs WHERE id=$1", [id])
@@ -29,6 +41,7 @@ export default async (req: VercelRequest, res: VercelResponse) => {
             .then(async (data) => {
               const songTitle = data.title;
               const songImage = data.image;
+
               db.query("SELECT wins FROM stats WHERE songname=$1", [
                 songTitle,
               ]).then(async (r) => {
@@ -38,7 +51,8 @@ export default async (req: VercelRequest, res: VercelResponse) => {
                     Number(wins) + 1,
                     songTitle,
                   ]);
-                  res.send({ updated: true })
+                  await updateRedis(redis, db);
+                  res.send({ updated: true });
                   res.end();
                   return;
                 } else {
@@ -47,12 +61,15 @@ export default async (req: VercelRequest, res: VercelResponse) => {
                       "INSERT INTO stats(songname, cover_img, wins, artist) VALUES($1,$2,$3,$4)",
                       [songTitle, songImage, 1, data.artist]
                     )
-                    .then(() => res.send({ updated: true }))
-                    .catch((err) =>
+                    .then(async (r) => {
+                      await updateRedis(redis, db);
+                      res.send({ updated: true });
+                    })
+                    .catch((err) => {
                       res
                         .status(400)
-                        .send({ updated: false, message: err.stack })
-                    );
+                        .send({ updated: false, message: err.stack });
+                    });
                   return;
                 }
               });
