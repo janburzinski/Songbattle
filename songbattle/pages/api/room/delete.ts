@@ -14,11 +14,6 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     }
     const db = await connectToDb();
 
-    //check cookies
-    /*const userCookie = req.cookies.user;
-    if (userCookie === null || userCookie === "undefined")
-      return res.status(200).send({ deleted: false, error: true });*/
-
     db.query("SELECT songlink FROM songs WHERE id=$1", [id])
       .then((a) => {
         if (a.rowCount >= 1) {

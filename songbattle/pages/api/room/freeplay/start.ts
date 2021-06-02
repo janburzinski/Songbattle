@@ -129,29 +129,32 @@ export default async (req: VercelRequest, res: VercelResponse) => {
         owner,
         secretId,
       ])
+      .then(() => {
+        db.query("SELECT owner FROM room WHERE id=$1", [id], (err, r) => {
+          if (err) {
+            res.status(400).send({
+              added: false,
+              message: "There was an error while creating the freeplay room!",
+            });
+            return;
+          }
+          if (r.rowCount >= 1) {
+            const query = format(
+              "INSERT INTO songs(id, songlink, username) VALUES %L",
+              randomPickedSongs
+            );
+            db.query(query);
+
+            res.send({ id: id, created: true, secretId: secretId });
+            return;
+          }
+          res
+            .status(400)
+            .send({ added: false, message: "Room does not exist!" });
+        });
+      })
       .catch((err) =>
         res.status(400).send({ added: false, message: err.stack })
       );
-
-    db.query("SELECT owner FROM room WHERE id=$1", [id], (err, r) => {
-      if (err) {
-        res.status(400).send({
-          added: false,
-          message: "There was an error while creating the freeplay room!",
-        });
-        return;
-      }
-      if (r.rowCount >= 1) {
-        const query = format(
-          "INSERT INTO songs(id, songlink, username) VALUES %L",
-          randomPickedSongs
-        );
-        db.query(query);
-
-        res.send({ id: id, created: true, secretId: secretId });
-        return;
-      }
-      res.status(400).send({ added: false, message: "Room does not exist!" });
-    });
   }
 };

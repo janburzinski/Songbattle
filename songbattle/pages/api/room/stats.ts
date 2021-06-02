@@ -12,15 +12,18 @@ export default async (req: VercelRequest, res: VercelResponse) => {
       "CREATE TABLE stats(songname varchar(400), cover_img varchar(400), wins int, artist varchar(400))"
     );*/
 
+    // check redis if leaderboard is already cached
+    if (await redis.exists("leaderboard")) {
+      await redis.get("leaderboard").then(async (r) => {
+        res.status(200).send({ info: JSON.parse(r) });
+        redis.disconnect();
+      });
+      return;
+    }
+
+    // not cached - fetch from db
     db.query("SELECT * FROM stats ORDER BY wins DESC LIMIT 10")
       .then(async (r) => {
-        if (await redis.exists("leaderboard")) {
-          await redis.get("leaderboard").then(async (r) => {
-            res.status(200).send({ info: JSON.parse(r) });
-            redis.disconnect();
-          });
-          return;
-        }
         await redis
           .set("leaderboard", JSON.stringify(r.rows))
           .then(async () => {

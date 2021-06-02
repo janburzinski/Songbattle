@@ -8,15 +8,16 @@ import { useState } from "react";
 export default function Home({ roomId }) {
   const router = useRouter();
   const [processingVote, setProcessingVote] = useState(false);
+  const [songCount, setSongCount] = useState(0);
   const apiURL = `${url}/api/song/queue/${roomId}`;
+  // i know its dumb to use swr then but im too lazy to change it to normal fetch
   const { data, error } = useSWR<{ info: any[] }>(apiURL, fetcher, {
     refreshInterval: 0,
   });
   let songLink1 = "https://open.spotify.com/embed/track/1pGlbknNqHchwYzHh3ffJj";
   let songLink2 = "https://open.spotify.com/embed/track/1pGlbknNqHchwYzHh3ffJj";
-  let alreadySet = false;
 
-  if (data && !alreadySet) {
+  if (data) {
     songLink1 = data.info[0].songlink.replace(
       "https://open.spotify.com/track/",
       ""
@@ -25,12 +26,10 @@ export default function Home({ roomId }) {
       data.info[1] !== null
         ? data.info[1].songlink.replace("https://open.spotify.com/track/", "")
         : "";
-    alreadySet = true;
   }
 
   const voteForSong1 = async (e) => {
     e.preventDefault();
-    //true
     setProcessingVote(true);
 
     const s2 = data.info[1];
@@ -44,7 +43,6 @@ export default function Home({ roomId }) {
     });
 
     const result = await res.json();
-    //false
     if (result.message === "Room or song not found") {
       mutate(apiURL);
       setProcessingVote(false);
@@ -55,6 +53,7 @@ export default function Home({ roomId }) {
       return;
     }
     setProcessingVote(false);
+    setSongCount(result.songCount);
     mutate(apiURL);
   };
 
@@ -73,16 +72,16 @@ export default function Home({ roomId }) {
     });
 
     const result = await res.json();
-    setProcessingVote(false);
     if (result.message === "Room or song not found") {
       mutate(apiURL);
       return;
     }
     if (result.songCount <= 1) {
-      //delete room
       router.push("/room/win/" + roomId);
       return;
     }
+    setProcessingVote(false);
+    setSongCount(result.songCount);
     mutate(apiURL);
   };
 
@@ -103,6 +102,11 @@ export default function Home({ roomId }) {
       </Head>
       <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 dark:bg-gray-800">
         <div className="max-w-md w-full space-y-8">
+          <div>
+            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
+              {songCount != 0 ? `Songs in Queue: ${songCount}` : ""}
+            </h2>
+          </div>
           <div>
             {data ? (
               <p className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">

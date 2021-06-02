@@ -32,7 +32,7 @@ export default function Queue({ exist }) {
 
     const songLink = e.target.songlink.value;
 
-    if (!songLink.includes("https://open.spotify.com/track/")) {
+    if (!songLink.startsWith("https://open.spotify.com/track/")) {
       swal({
         icon: "error",
         text: "The Songlink needs to be a Spotify Link",

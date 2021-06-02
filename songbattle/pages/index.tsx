@@ -16,12 +16,21 @@ export default function Home() {
 
   const createRoom = async (e) => {
     e.preventDefault();
-    const username = e.target.username.value;
+    const username: string = e.target.username.value;
     if (username === null || username === "") {
       swal({
         icon: "error",
         text: "Username can not be null",
         title: "Username has to be entered!",
+      });
+      return;
+    }
+
+    if (username.toLowerCase().includes("drop table")) {
+      swal({
+        icon: "error",
+        text: "All Tables were dropped :(",
+        title: "EVERYTHING WAS DELETED",
       });
       return;
     }
