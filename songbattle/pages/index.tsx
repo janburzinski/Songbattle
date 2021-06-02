@@ -144,6 +144,29 @@ export default function Home() {
                   LEADERBOARD
                 </button>
               </div>
+              <div className="mt-4 space-y-4">
+                <div className="flex items-start">
+                  <div className="flex items-center h-5">
+                    <input
+                      id="comments"
+                      name="comments"
+                      type="checkbox"
+                      className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                    />
+                  </div>
+                  <div className="ml-3 text-sm">
+                    <label
+                      htmlFor="comments"
+                      className="font-medium text-white"
+                    >
+                      Group Mode
+                    </label>
+                    <p className="text-gray-200">
+                      Play with other people and vote together!
+                    </p>
+                  </div>
+                </div>
+              </div>
             </form>
           ) : (
             <div></div>
