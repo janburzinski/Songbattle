@@ -21,7 +21,7 @@ export default function Home({ roomId }) {
   }*/
 
   useEffect(() => {
-    const socket = socketIOClient("http://localhost:8080", {
+    const socket: Socket = socketIOClient("http://localhost:8080", {
       transports: ["websocket"],
     });
   });
