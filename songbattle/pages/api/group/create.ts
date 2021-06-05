@@ -16,12 +16,12 @@ export default async (req: VercelRequest, res: VercelResponse) => {
       return;
     }
     const db = await connectToDb();
-    //await db.query("DROP TABLE room");
-    await db.query(
-      "CREATE TABLE group(id varchar(400) UNIQUE, owner varchar(400), secretid varchar(400))"
-    );
+    //await db.query("DROP TABLE groups");
+    /*await db.query(
+      "CREATE TABLE groups(id varchar(400) UNIQUE, owner varchar(400), secretid varchar(400))"
+    );*/
 
-    db.query("INSERT INTO group(id, owner, secretid) VALUES($1,$2,$3)", [
+    db.query("INSERT INTO groups(id, owner, secretid) VALUES($1,$2,$3)", [
       id,
       owner,
       secretId,
@@ -31,7 +31,6 @@ export default async (req: VercelRequest, res: VercelResponse) => {
           created: true,
           id: id,
           secretId: secretId,
-          inviteUrl: `${url}/group/join/${id}`,
         })
       )
       .catch((err) =>

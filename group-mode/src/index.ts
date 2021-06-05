@@ -9,20 +9,33 @@ const io = new Server(server);
 
 const main = async () => {
   io.on("connection", (socket: Socket) => {
-    const roomHandler = new RoomHandler(socket);
-    io.on("join_room", (roomId: string) => {
-      socket.join(roomId);
-      roomHandler.joinRoom(roomId);
+    console.log(socket.id + " connected!");
+    console.log(socket.rooms);
+    socket.on("join_room", async (data: any) => {
+      const roomHandler = new RoomHandler(socket, data.roomId);
+      socket.join(data.roomId);
+      roomHandler.joinRoom();
+      //send update user count signal
+      socket.emit("update_user_count", {
+        userCount: await roomHandler.getUserCount(),
+      });
     });
-    io.on("leave_room", (roomId: string) => {
-      socket.leave(roomId);
-      roomHandler.leaveRoom(roomId);
+    socket.on("leave_room", (data: any) => {
+      const roomHandler = new RoomHandler(socket, data.roomId);
+      socket.leave(data.roomId);
+      roomHandler.leaveRoom();
     });
-    io.on("create_room", (roomId: string) => {
-      const roomHandler = new RoomHandler(socket);
-      roomHandler.createRoomCache(roomId);
+    socket.on("create_room", async (data: any) => {
+      const roomHandler = new RoomHandler(socket, data.roomId);
+      roomHandler.createRoomCache();
+      socket.join(data.roomId);
+      //send update user count signal
+      socket.emit("update_user_count", {
+        userCount: await roomHandler.getUserCount(),
+      });
     });
   });
+  io.setMaxListeners(10000000);
   server.listen(8080, () => console.log("Listening on Port 8080"));
 };
 

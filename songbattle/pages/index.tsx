@@ -9,9 +9,14 @@ export default function Home() {
   const router = useRouter();
   const [cookie, setCookie] = useCookies(["user"]);
   const [loading, setLoading] = useState(false);
+  const [groupMode, setGroupMode] = useState(false);
 
   const updateLoadingState = () => {
     setLoading(!loading);
+  };
+
+  const handleGroupModeChange = (e) => {
+    setGroupMode(e.target.checked);
   };
 
   const createRoom = async (e) => {
@@ -36,21 +41,39 @@ export default function Home() {
     }
 
     updateLoadingState();
-    const res = await fetch(`${url}/api/room/create`, {
-      body: JSON.stringify({ owner: username }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-      method: "post",
-    });
-    const result = await res.json();
-    if (result != null) updateLoadingState();
-    setCookie("user", result.secretId, {
-      path: "/",
-      maxAge: 3600, //should be 1 hours or something like that
-      sameSite: true,
-    });
-    router.push("/room/waiting/" + result.id);
+    if (!groupMode) {
+      const res = await fetch(`${url}/api/room/create`, {
+        body: JSON.stringify({ owner: username }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "post",
+      });
+      const result = await res.json();
+      if (result != null) updateLoadingState();
+      setCookie("user", result.secretId, {
+        path: "/",
+        maxAge: 3600, //should be 1 hours or something like that
+        sameSite: true,
+      });
+      router.push("/room/waiting/" + result.id);
+    } else {
+      const res = await fetch(`${url}/api/group/create`, {
+        body: JSON.stringify({ owner: username }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "post",
+      });
+      const result = await res.json();
+      if (result != null) updateLoadingState();
+      setCookie("user", result.secretId, {
+        path: "/",
+        maxAge: 3600, //should be 1 hours or something like that
+        sameSite: true,
+      });
+      router.push("/group/" + result.id);
+    }
   };
 
   const startFreeplay = async (e) => {
@@ -152,6 +175,8 @@ export default function Home() {
                       name="comments"
                       type="checkbox"
                       className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                      defaultChecked={groupMode}
+                      onChange={handleGroupModeChange}
                     />
                   </div>
                   <div className="ml-3 text-sm">
