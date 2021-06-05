@@ -24,7 +24,7 @@ export default async (req: VercelRequest, res: VercelResponse) => {
 
       //check if groupmode
       if (slug[2] != null && slug[2] === "group") {
-        db.query("SELECT secretid FROM group WHERE id=$1", [id], (err, r) => {
+        db.query("SELECT secretid FROM groups WHERE id=$1", [id], (err, r) => {
           if (err || r.rowCount <= 0) {
             return res.status(200).send({ exist: false });
           }
