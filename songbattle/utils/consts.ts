@@ -5,6 +5,9 @@ export const __prod__ = process.env.NODE_ENV === "production" ? true : false;
 export const url = __prod__
   ? "https://songbattle-rose.vercel.app"
   : "http://localhost:3000";
+export const socketURL = __prod__
+  ? "http://localhost:3000"
+  : "http://localhost:3000";
 export const generateId = (): String => {
   return uuidv4();
 };

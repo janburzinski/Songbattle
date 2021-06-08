@@ -1,6 +1,6 @@
 import Head from "next/head";
 import { NextRouter, useRouter, withRouter } from "next/router";
-import { url } from "../../utils/consts";
+import { socketURL, url } from "../../utils/consts";
 import React, { useEffect, useState } from "react";
 import socketIOClient, { Socket } from "socket.io-client";
 
@@ -23,6 +23,11 @@ class GroupWaiting extends React.Component<GroupWaitingProps> {
     reconnectionDelayMax: 10000,
     reconnectionAttempts: Infinity,
   });
+
+  constructor(props) {
+    super(props);
+    this.startGame = this.startGame.bind(this);
+  }
 
   //TODO: Check the Cookie
 
@@ -48,9 +53,6 @@ class GroupWaiting extends React.Component<GroupWaitingProps> {
   }
 
   private disconnect() {
-    this.socket.emit("owner_left_room", {
-      roomId: this.props.router.query.roomId,
-    });
     this.socket.emit("leave_room", { roomId: this.props.router.query.roomId });
   }
 
@@ -64,15 +66,22 @@ class GroupWaiting extends React.Component<GroupWaitingProps> {
   public handleIncomingPayload() {
     this.socket.on("update_user_count", (data: any) => {
       this.setState({ usersInQueue: Number(data.userCount) });
+      if (data.songCount != this.state.songsInQueue && data.songCount != null)
+        this.setState({ songsInQueue: data.songCount });
+    });
+    this.socket.on("update_song_count", (data: any) => {
+      this.setState({ songsInQueue: Number(data.songCount) });
     });
   }
 
   private startGame() {
+    const roomId = this.props.router.query.roomId;
+    console.log("dkfjgndfjklgndfkjgndfkjg");
     if (this.socket === null) return;
     this.socket.emit("start_game", {
-      roomId: this.props.router.query.roomId,
+      roomId: roomId,
     });
-    this.props.router.push("");
+    this.props.router.push("/group/play/" + roomId);
   }
 
   render() {
@@ -117,7 +126,7 @@ class GroupWaiting extends React.Component<GroupWaitingProps> {
               </a>
               <button
                 type="submit"
-                onSubmit={this.startGame}
+                onClick={this.startGame}
                 className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
                 START

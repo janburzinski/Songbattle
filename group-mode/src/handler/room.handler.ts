@@ -1,4 +1,5 @@
 import { Socket } from "socket.io";
+import { connectToDb } from "../db/connectToDb";
 import { connectToRedis } from "../db/redis";
 import { userHandler } from "../index";
 
@@ -27,7 +28,14 @@ export class RoomHandler {
     const redis = await connectToRedis();
     await redis.del(`${this.redisPrefix}:${this.roomId}`);
     userHandler.removeSocketIdFromList(this.socket.id);
+    userHandler.removeOwner(this.socket.id);
     redis.disconnect();
+    await this.deleteRoom();
+  };
+
+  public deleteRoom = async () => {
+    const db = await connectToDb();
+    await db.query("DELETE FROM groups WHERE id=$1", [this.roomId]);
   };
 
   public roomExists = async () => {

@@ -3,6 +3,7 @@ import { NextRouter, withRouter } from "next/router";
 import React from "react";
 import socketIOClient, { Socket } from "socket.io-client";
 import swal from "sweetalert";
+import { socketURL } from "../../../utils/consts";
 
 interface WithRouterProps {
   router: NextRouter;
@@ -11,10 +12,6 @@ interface WithRouterProps {
 interface GroupWaitingProps extends WithRouterProps {}
 
 class GroupWaiting extends React.Component<GroupWaitingProps> {
-  public state = {
-    connectedToSocket: false,
-    submittedSong: false,
-  };
   public socket: Socket = socketIOClient("http://localhost:8080", {
     transports: ["websocket"],
     reconnection: true,
@@ -22,6 +19,15 @@ class GroupWaiting extends React.Component<GroupWaitingProps> {
     reconnectionDelayMax: 10000,
     reconnectionAttempts: Infinity,
   });
+  public state = {
+    connectedToSocket: false,
+    submittedSong: false,
+  };
+
+  constructor(props) {
+    super(props);
+    this.submitSong = this.submitSong.bind(this);
+  }
 
   //TODO: Check the Cookie
 
@@ -44,16 +50,38 @@ class GroupWaiting extends React.Component<GroupWaitingProps> {
   }
 
   public handleIncomingPayload() {
-    this.socket.on("room_start", (data: any) => {
-      //TODO: Handle start
+    this.socket.on("start_game", (data: any) => {
+      this.props.router.push("/group/play/" + this.props.router.query.roomId);
     });
-    this.socket.on("owner_left_room_leave", () => {
+    /*this.socket.on("owner_left_room_leave", () => {
       swal({
         icon: "warning",
         title: "Owner left!",
         text: "The Owner left the room! You will be redirected!",
       });
       this.props.router.push("/");
+    });*/
+    this.socket.on("add_song_success", () => {
+      swal({
+        icon: "success",
+        text: "The Song has been successfully added",
+        title: "Successfully added the Song",
+      });
+    });
+  }
+
+  submitSong(e) {
+    e.preventDefault();
+    if (this.socket === null) {
+      swal({
+        icon: "warning",
+        title: "Socket not connected!",
+        text: "Connection to the socket was lost! Please reload the page!",
+      });
+    }
+    this.socket.emit("add_song", {
+      roomId: this.props.router.query.roomId,
+      songlink: e.target.songlink.value,
     });
   }
 
@@ -80,21 +108,26 @@ class GroupWaiting extends React.Component<GroupWaitingProps> {
                   Waiting for the Owner to start...
                 </p>
               ) : (
-                <form className="mt-8 space-y-6" action="#" method="POST">
+                <form
+                  className="mt-8 space-y-6"
+                  action="#"
+                  method="POST"
+                  onSubmit={this.submitSong}
+                >
                   <p className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
                     Group Waiting Room
                   </p>
                   <div>
-                    <label htmlFor="username" className="sr-only">
+                    <label htmlFor="songlink" className="sr-only">
                       Songlink
                     </label>
                     <input
-                      id="username"
-                      name="username"
+                      id="songlink"
+                      name="songlink"
                       type="text"
-                      autoComplete="username"
+                      autoComplete="text"
                       className="dark:bg-gray-800 dark:text-white appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                      placeholder="Username"
+                      placeholder="Songlink"
                     />
                   </div>
                   <div>
