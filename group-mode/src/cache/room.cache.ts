@@ -34,7 +34,7 @@ export class RoomCache {
   public syncCache = async () => {
     const db = await connectToDb();
     console.log("Syncing Rooms to local Cache");
-    await db.query("SELECT id FROM groups").then((r) => {
+    await db.query("SELECT * FROM groups").then((r) => {
       for (let i = 0; i < r.rows.length; i++) {
         const room = new Room(
           r.rows[i].id,
