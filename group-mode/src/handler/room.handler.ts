@@ -1,7 +1,8 @@
 import { Socket } from "socket.io";
+import { Room } from "../cache/room.cache";
 import { connectToDb } from "../db/connectToDb";
 import { connectToRedis } from "../db/redis";
-import { userHandler } from "../index";
+import { roomCache, userHandler } from "../index";
 
 export class RoomHandler {
   public socket: Socket;
@@ -15,11 +16,13 @@ export class RoomHandler {
   }
 
   public createRoomCache = async () => {
+    if (roomCache.isCached(this.roomId)) return; // TODO: do something about it
     const redis = await connectToRedis();
     console.log("roomId:" + this.roomId);
     await redis.set(`${this.redisPrefix}:${this.roomId}`, 1, "ex", 86400); // expire after 1 day
     userHandler.addSocketIdToList(this.socket.id, this.roomId);
     userHandler.addOwner(this.socket.id, this.roomId);
+    roomCache.addRoomToCache(new Room(this.roomId, this.socket.id));
     redis.disconnect();
   };
 
@@ -29,8 +32,9 @@ export class RoomHandler {
     await redis.del(`${this.redisPrefix}:${this.roomId}`);
     userHandler.removeSocketIdFromList(this.socket.id);
     userHandler.removeOwner(this.socket.id);
-    redis.disconnect();
+    roomCache.removeRoomFromCache(this.roomId);
     await this.deleteRoom();
+    redis.disconnect();
   };
 
   public deleteRoom = async () => {

@@ -15,6 +15,7 @@ class GroupWaiting extends React.Component<GroupWaitingProps> {
     songsInQueue: 0,
     usersInQueue: 0,
     connectedToSocket: false,
+    gameStarted: false,
   };
   public socket: Socket = socketIOClient("http://localhost:8080", {
     transports: ["websocket"],
@@ -53,7 +54,10 @@ class GroupWaiting extends React.Component<GroupWaitingProps> {
   }
 
   private disconnect() {
-    this.socket.emit("leave_room", { roomId: this.props.router.query.roomId });
+    if (!this.state.gameStarted)
+      this.socket.emit("leave_room", {
+        roomId: this.props.router.query.roomId,
+      });
   }
 
   componentWillUnmount() {

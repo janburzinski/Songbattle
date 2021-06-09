@@ -3,15 +3,14 @@ import { NextRouter, withRouter } from "next/router";
 import React from "react";
 import socketIOClient, { Socket } from "socket.io-client";
 import swal from "sweetalert";
-import { socketURL } from "../../../utils/consts";
 
 interface WithRouterProps {
   router: NextRouter;
 }
 
-interface GroupWaitingProps extends WithRouterProps {}
+interface GroupPlayProps extends WithRouterProps {}
 
-class GroupWaiting extends React.Component<GroupWaitingProps> {
+class GroupPlay extends React.Component<GroupPlayProps> {
   public socket: Socket = socketIOClient("http://localhost:8080", {
     transports: ["websocket"],
     reconnection: true,
@@ -22,7 +21,7 @@ class GroupWaiting extends React.Component<GroupWaitingProps> {
   public state = {
     connectedToSocket: false,
     submittedSong: false,
-    gameStarted: false,
+    queue: [],
   };
 
   constructor(props) {
@@ -38,7 +37,7 @@ class GroupWaiting extends React.Component<GroupWaitingProps> {
       setTimeout(() => {
         console.log(this.socket.connected);
         this.setState({ connectedToSocket: this.socket.connected });
-        this.socket.emit("join_room", {
+        this.socket.emit("get_queue", {
           roomId: this.props.router.query.roomId,
         });
       }, 2000);
@@ -46,17 +45,18 @@ class GroupWaiting extends React.Component<GroupWaitingProps> {
   }
 
   componentWillUnmount() {
-    if (!this.state.gameStarted) {
-      this.socket.emit("leave_room", {
-        roomId: this.props.router.query.roomId,
-      });
-      this.socket.disconnect();
-    }
+    this.socket.emit("leave_room", { roomId: this.props.router.query.roomId });
+    this.socket.disconnect();
   }
 
   public handleIncomingPayload() {
     this.socket.on("start_game", (data: any) => {
       this.props.router.push("/group/play/" + this.props.router.query.roomId);
+    });
+    this.socket.on("queue", (data: any) => {
+      if (data.queue === null) return;
+      this.setState({ queue: data.queue });
+      console.log(data.queue);
     });
     /*this.socket.on("owner_left_room_leave", () => {
       swal({
@@ -91,12 +91,11 @@ class GroupWaiting extends React.Component<GroupWaitingProps> {
   }
 
   render() {
-    const { roomId } = this.props.router.query;
     this.handleIncomingPayload();
     return (
       <div className="dark:bg-gray-800">
         <Head>
-          <title>Songbattle - Group:{roomId}</title>
+          <title>Songbattle - In Game</title>
         </Head>
         <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 dark:bg-gray-800">
           <div className="max-w-md w-full space-y-8">
@@ -155,4 +154,4 @@ class GroupWaiting extends React.Component<GroupWaitingProps> {
   }
 }
 
-export default withRouter(GroupWaiting);
+export default withRouter(GroupPlay);

@@ -18,6 +18,7 @@ export const connectToDb = async (
   });
 
   client.connect();
+  client.on("error", (err) => console.error(err));
   cachedClient = client;
   return client;
 };

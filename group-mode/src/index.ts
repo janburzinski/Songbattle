@@ -5,43 +5,67 @@ import { Server, Socket } from "socket.io";
 import { RoomHandler } from "./handler/room.handler";
 import { SongHandler } from "./handler/song.handler";
 import { UserHandler } from "./handler/user.handler";
+import { RoomCache } from "./cache/room.cache";
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 export const userHandler: UserHandler = new UserHandler();
+export const roomCache: RoomCache = new RoomCache();
 
 /**
  * TODO: Socket Authetication
  */
 
 const main = async () => {
+  await roomCache.syncCache();
+
   io.on("connection", (socket: Socket) => {
     const socketId = socket.id;
     console.log(socket.id + " connected!");
 
     /**
-     * Song Queue
+     * Game
+     */
+
+    socket.on("get_queue", async (data: any) => {
+      const songHandler = new SongHandler(socket, data.roomId);
+      const queue = await songHandler.getQueue();
+      console.log("queue: " + queue);
+      socket.to(data.roomId).emit("queue", { queue: queue });
+      socket.emit("queue", { queue: queue });
+    });
+
+    socket.on("get_next_queue", async (data: any) => {
+      const songHandler = new SongHandler(socket, data.roomId);
+      songHandler.getQueue(true).then((result) => {
+        socket.to(data.roomId).emit("queue", { queue: result });
+        socket.emit("queue", { queue: result });
+      });
+    });
+
+    /**
+     * Songs
      */
     socket.on("add_song", async (data: any) => {
       const songHandler = new SongHandler(socket, data.roomId);
       await songHandler.addSong(data.songlink);
       console.log(data.songlink + " - " + data.roomId);
       socket.emit("add_song_success");
-      songHandler.getSongsInQueue().then((songCount) => {
-        console.log("songCount: " + songCount);
-        socket.to(data.roomId).emit("update_song_count", {
-          songCount: songCount,
-        });
+      const songCount = await songHandler.getSongsInQueue();
+      console.log("songCount: " + songCount);
+      socket.to(data.roomId).emit("update_song_count", {
+        songCount: songCount,
       });
-    });
-
-    socket.on("get_songs", async (data: any) => {
-      const roomId = data.roomId;
-      const songHandler = new SongHandler(socket, roomId);
-      songHandler.getQueue().then((songs) => {
-        socket.to(roomId).emit("songs", { songs: songs });
-      });
+      /*songHandler
+        .getSongsInQueue()
+        .then((songCount) => {
+          console.log("songCount: " + songCount);
+          socket.to(data.roomId).emit("update_song_count", {
+            songCount: songCount,
+          });
+        })
+        .catch((err) => console.error(err));*/
     });
 
     socket.on("start_game", async (data: any) => {
