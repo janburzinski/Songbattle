@@ -3,6 +3,7 @@ import { NextRouter, useRouter, withRouter } from "next/router";
 import { socketURL, url } from "../../utils/consts";
 import React, { useEffect, useState } from "react";
 import socketIOClient, { Socket } from "socket.io-client";
+import swal from "sweetalert";
 
 interface WithRouterProps {
   router: NextRouter;
@@ -69,13 +70,23 @@ class GroupWaiting extends React.Component<GroupWaitingProps> {
 
   public handleIncomingPayload() {
     this.socket.on("update_user_count", (data: any) => {
-      this.setState({ usersInQueue: Number(data.userCount) });
+      this.setState({ usersInQueue: parseInt(data.userCount) });
       if (data.songCount != this.state.songsInQueue && data.songCount != null)
         this.setState({ songsInQueue: data.songCount });
     });
     this.socket.on("update_song_count", (data: any) => {
-      this.setState({ songsInQueue: Number(data.songCount) });
+      this.setState({ songsInQueue: parseInt(data.songCount) });
     });
+    this.socket.on("start_game_error", (data: any) => {
+      swal({
+        icon: "error",
+        title: data.errorTitle,
+        text: data.error,
+      });
+    });
+    this.socket.on("start_game_redirect", () =>
+      this.props.router.push("/group/play/" + this.props.router.query.roomId)
+    );
   }
 
   private startGame() {
@@ -85,7 +96,6 @@ class GroupWaiting extends React.Component<GroupWaitingProps> {
     this.socket.emit("start_game", {
       roomId: roomId,
     });
-    this.props.router.push("/group/play/" + roomId);
   }
 
   render() {

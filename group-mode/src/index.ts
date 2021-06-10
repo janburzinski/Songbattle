@@ -6,6 +6,7 @@ import { RoomHandler } from "./handler/room.handler";
 import { SongHandler } from "./handler/song.handler";
 import { UserHandler } from "./handler/user.handler";
 import { RoomCache } from "./cache/room.cache";
+import { ErrorTypes } from "./errors/ErrorTypes";
 
 const app = express();
 const server = http.createServer(app);
@@ -57,19 +58,21 @@ const main = async () => {
       socket.to(data.roomId).emit("update_song_count", {
         songCount: songCount,
       });
-      /*songHandler
-        .getSongsInQueue()
-        .then((songCount) => {
-          console.log("songCount: " + songCount);
-          socket.to(data.roomId).emit("update_song_count", {
-            songCount: songCount,
-          });
-        })
-        .catch((err) => console.error(err));*/
     });
 
     socket.on("start_game", async (data: any) => {
       const roomId = data.roomId;
+      const songHandler = new SongHandler(socket, data.roomId);
+      const songCount = await songHandler.getSongsInQueue();
+      console.log("songCount startGame: " + songCount);
+      if (songCount % 2 != 0 || songCount === 0) {
+        socket.emit("start_game_error", {
+          error: ErrorTypes.NOT_ENOUGH_SONGS_IN_QUEUE,
+          errorTitle: "Not enough Songs in Queue",
+        });
+        return;
+      }
+      socket.emit("start_game_redirect");
       socket.to(roomId).emit("start_game", { roomId: roomId });
     });
 

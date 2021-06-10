@@ -73,6 +73,16 @@ class GroupWaiting extends React.Component<GroupWaitingProps> {
         title: "Successfully added the Song",
       });
     });
+    this.socket.on("queue", (data: any) => {
+      if (data.queue === "Error while getting the songs in queue!") {
+        swal({
+          icon: "error",
+          text: "An Error occurred while getting the songs in queue!",
+          title: "Error while getting Queue",
+        });
+        //maybe dispatch to server and try again or delete?
+      }
+    });
   }
 
   submitSong(e) {

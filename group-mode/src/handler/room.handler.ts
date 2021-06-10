@@ -8,18 +8,20 @@ export class RoomHandler {
   public socket: Socket;
   private roomId: string;
   private redisPrefix: string;
+  private redisName: string;
 
   constructor(socket: Socket, roomId: string | null) {
     this.socket = socket;
     this.roomId = roomId ?? userHandler.users.get(socket.id)!;
     this.redisPrefix = "room";
+    this.redisName = `${this.redisPrefix}:${this.roomId}`;
   }
 
   public createRoomCache = async () => {
     if (roomCache.isCached(this.roomId)) return; // TODO: do something about it
     const redis = await connectToRedis();
     console.log("roomId:" + this.roomId);
-    await redis.set(`${this.redisPrefix}:${this.roomId}`, 1, "ex", 86400); // expire after 1 day
+    await redis.set(this.redisName, 1, "ex", 86400); // expire after 1 day
     userHandler.addSocketIdToList(this.socket.id, this.roomId);
     userHandler.addOwner(this.socket.id, this.roomId);
     roomCache.addRoomToCache(new Room(this.roomId, this.socket.id));
@@ -29,7 +31,7 @@ export class RoomHandler {
   public deleteRoomCache = async () => {
     if (!this.roomExists()) return;
     const redis = await connectToRedis();
-    await redis.del(`${this.redisPrefix}:${this.roomId}`);
+    await redis.del(this.redisName);
     userHandler.removeSocketIdFromList(this.socket.id);
     userHandler.removeOwner(this.socket.id);
     roomCache.removeRoomFromCache(this.roomId);
@@ -44,42 +46,46 @@ export class RoomHandler {
 
   public roomExists = async () => {
     const redis = await connectToRedis();
-    let exists = 0;
-    redis.exists(`${this.redisPrefix}:${this.roomId}`, (err, r) => {
-      if (err) exists = 1;
-      exists = r;
+    return new Promise((resolve, _reject) => {
+      redis.exists(this.redisName, (err, r) => {
+        if (err) resolve(true);
+        resolve(r === 1 ? true : false);
+        redis.disconnect();
+      });
     });
-    redis.disconnect();
-    return exists;
   };
 
   public joinRoom = async () => {
     if (!this.roomExists()) return;
     const redis = await connectToRedis();
     userHandler.addSocketIdToList(this.socket.id, this.roomId);
-    await redis.incr(`${this.redisPrefix}:${this.roomId}`);
+    await redis.incr(this.redisName);
     redis.disconnect();
   };
 
   public leaveRoom = async () => {
     if (!this.roomExists()) return;
     const redis = await connectToRedis();
-    await redis.decr(`${this.redisPrefix}:${this.roomId}`);
+    await redis.decr(this.redisName);
     userHandler.removeSocketIdFromList(this.socket.id);
     redis.disconnect();
   };
 
-  public getUserCount = async (): Promise<string> => {
+  public getUserCount = async (): Promise<number> => {
     const redis = await connectToRedis();
-    let userCount: string = "1";
-    await redis.get(`${this.redisPrefix}:${this.roomId}`).then((result) => {
-      if (result === null) return userCount;
-      if (result === "") return userCount;
-      userCount = result!;
-      console.log("userCountResult:" + result);
-      return result;
+    let userCount: number = 1;
+    return new Promise((resolve, _reject) => {
+      redis.get(this.redisName).then((result) => {
+        if (result === null || result === "") resolve(userCount);
+        console.log("userCountResult: " + result);
+        try {
+          resolve(parseInt(result!));
+        } catch (err) {
+          console.error(err);
+          resolve(userCount);
+        }
+        redis.disconnect();
+      });
     });
-    redis.disconnect();
-    return userCount;
   };
 }

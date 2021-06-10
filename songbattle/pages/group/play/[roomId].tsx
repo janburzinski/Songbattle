@@ -21,7 +21,7 @@ class GroupPlay extends React.Component<GroupPlayProps> {
   public state = {
     connectedToSocket: false,
     submittedSong: false,
-    queue: [],
+    queue: [{}],
   };
 
   constructor(props) {
@@ -54,8 +54,19 @@ class GroupPlay extends React.Component<GroupPlayProps> {
       this.props.router.push("/group/play/" + this.props.router.query.roomId);
     });
     this.socket.on("queue", (data: any) => {
-      if (data.queue === null) return;
-      this.setState({ queue: data.queue });
+      if (
+        data.queue === "Error while getting the songs in queue!" ||
+        data.queue === null
+      ) {
+        swal({
+          icon: "error",
+          text: "An Error occurred while getting the songs in queue!",
+          title: "Error while getting Queue",
+        });
+        return;
+        //maybe dispatch to server and try again or delete?
+      }
+      this.setState({ queue: JSON.parse(data.queue) });
       console.log(data.queue);
     });
     /*this.socket.on("owner_left_room_leave", () => {
