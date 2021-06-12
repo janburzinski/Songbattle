@@ -7,23 +7,57 @@ import { SongHandler } from "./handler/song.handler";
 import { UserHandler } from "./handler/user.handler";
 import { RoomCache } from "./cache/room.cache";
 import { ErrorTypes } from "./errors/ErrorTypes";
+import { VoteCache } from "./cache/vote.cache";
+import { VoteHandler } from "./handler/vote.handler";
+import { connectToRedis } from "./db/redis";
+import { v4 as uuidv4 } from "uuid";
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
-export const userHandler: UserHandler = new UserHandler();
-export const roomCache: RoomCache = new RoomCache();
+export let userHandler: UserHandler;
+export let roomCache: RoomCache;
+export let voteCache: VoteCache;
 
 /**
  * TODO: Socket Authetication
+ * TODO: make redis timneout times consistent
  */
 
 const main = async () => {
+  userHandler = new UserHandler();
+  roomCache = new RoomCache();
+  voteCache = new VoteCache();
   await roomCache.syncCache();
 
   io.on("connection", (socket: Socket) => {
     const socketId = socket.id;
     console.log(socket.id + " connected!");
+
+    /**
+     * Win
+     */
+    socket.on("win_redirect", (data: any) => {
+      socket.to(data.roomId).emit("redirect_win");
+    });
+    /**
+     * Owner
+     */
+    socket.on("get_owner_secret_key", async (data: any) => {
+      const redis = await connectToRedis();
+      const roomId = data.roomId;
+      redis.exists(`owner:${roomId}`, (exists) => {
+        if (exists) {
+          redis.disconnect();
+          return;
+        }
+        const uuid = uuidv4();
+        redis
+          .set(`owner:${roomId}`, uuid, "ex", 86400)
+          .then(() => redis.disconnect());
+        socket.emit("secret_key", { secret_key: uuid });
+      });
+    });
 
     /**
      * Game
@@ -32,17 +66,52 @@ const main = async () => {
     socket.on("get_queue", async (data: any) => {
       const songHandler = new SongHandler(socket, data.roomId);
       const queue = await songHandler.getQueue();
+      const songsInQueue = await songHandler.getSongsInQueue();
       console.log("queue: " + queue);
-      socket.to(data.roomId).emit("queue", { queue: queue });
-      socket.emit("queue", { queue: queue });
+      socket
+        .to(data.roomId)
+        .emit("queue", { queue: queue, songsInQueue: songsInQueue });
+      socket.emit("queue", { queue: queue, songsInQueue: songsInQueue });
     });
 
     socket.on("get_next_queue", async (data: any) => {
       const songHandler = new SongHandler(socket, data.roomId);
-      songHandler.getQueue(true).then((result) => {
-        socket.to(data.roomId).emit("queue", { queue: result });
-        socket.emit("queue", { queue: result });
-      });
+      const songLink1 = data.songlink1;
+      const songLink2 = data.songlink2;
+      await songHandler.removeSong(songLink1);
+      await songHandler.removeSong(songLink2);
+      const songsInQueue = await songHandler.getSongsInQueue();
+      const queue = songHandler.getQueue(true);
+      //remove everyone from vote cache
+      socket
+        .to(data.roomId)
+        .emit("queue", { queue: queue, songsInQueue: songsInQueue });
+      socket.emit("queue", { queue: queue, songsInQueue: songsInQueue });
+    });
+
+    /**
+     * Vote
+     */
+    socket.on("vote", async (data: any) => {
+      const roomId = data.roomId;
+      console.log("roomId:" + roomId);
+      const songlink = data.songlink;
+      const voteHandler = new VoteHandler(roomId, socket, songlink);
+      const vote = await voteHandler.vote();
+      //TODO: Delete other song
+      const voteCount = await voteHandler.getVotes();
+      if (vote) {
+        socket.to(data.roomId).emit("update_vote_count", {
+          songlink: songlink,
+          voteCount: voteCount,
+        });
+        socket.emit("update_vote_count", {
+          songlink: songlink,
+          voteCount: voteCount,
+        });
+      }
+
+      socket.emit("vote_success");
     });
 
     /**

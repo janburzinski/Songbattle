@@ -1,7 +1,7 @@
 import Head from "next/head";
 import { NextRouter, useRouter, withRouter } from "next/router";
-import { socketURL, url } from "../../utils/consts";
-import React, { useEffect, useState } from "react";
+import { setCookie, url } from "../../utils/consts";
+import React from "react";
 import socketIOClient, { Socket } from "socket.io-client";
 import swal from "sweetalert";
 
@@ -43,6 +43,9 @@ class GroupWaiting extends React.Component<GroupWaitingProps> {
         this.socket.emit("create_room", {
           roomId: this.props.router.query.roomId,
         });
+        this.socket.emit("get_owner_secret_key", {
+          roomId: this.props.router.query.roomId,
+        });
       }, 2000);
     }
   }
@@ -69,6 +72,10 @@ class GroupWaiting extends React.Component<GroupWaitingProps> {
   }
 
   public handleIncomingPayload() {
+    this.socket.on("secret_key", (data: any) => {
+      console.log(data.secret_key);
+      setCookie("secret_key", data.secret_key, 1);
+    });
     this.socket.on("update_user_count", (data: any) => {
       this.setState({ usersInQueue: parseInt(data.userCount) });
       if (data.songCount != this.state.songsInQueue && data.songCount != null)

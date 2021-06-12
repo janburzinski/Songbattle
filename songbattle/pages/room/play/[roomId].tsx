@@ -18,13 +18,14 @@ export default function Home({ roomId }) {
   let songLink2 = "https://open.spotify.com/embed/track/1pGlbknNqHchwYzHh3ffJj";
 
   if (data) {
-    songLink1 = data.info[0].songlink.replace(
-      "https://open.spotify.com/track/",
-      ""
-    );
+    songLink1 = data.info[0].songlink
+      .replace("https://open.spotify.com/track/", "")
+      .replace("https://open.spotify.com/embed/track/", "");
     songLink2 =
       data.info[1] !== null
-        ? data.info[1].songlink.replace("https://open.spotify.com/track/", "")
+        ? data.info[1].songlink
+            .replace("https://open.spotify.com/track/", "")
+            .replace("https://open.spotify.com/embed/track/", "")
         : "";
   }
 

@@ -57,19 +57,26 @@ export class SongHandler {
               console.error(err);
               reject(ErrorTypes.GET_QUEUE_ERROR);
             }
-            const song1 = result.rows[0].songlink;
-            const song2 = result.rows[1].songlink;
+            const song1 = result.rows[0].songlink
+              .replace("https://open.spotify.com/embed/track/", "")
+              .replace("https://open.spotify.com/track/", "");
+            let song2: string = "";
+            if (result.rowCount > 1)
+              song2 = result.rows[1].songlink
+                .replace("https://open.spotify.com/embed/track/", "")
+                .replace("https://open.spotify.com/track/", "");
             console.log("song1:" + song1);
             console.log("song1:" + song2);
-            try {
-              resolve(JSON.stringify(result.rows));
-              await this.removeSong(song1);
-              if (result.rowCount >= 0) await this.removeSong(song2);
-            } catch (err) {
-              if (result.rowCount >= 0) await this.removeSong(song1);
-              console.error(err);
-              resolve(song1);
-            }
+            if (result.rowCount <= 1)
+              return resolve(
+                JSON.stringify([{ songlink: song1, id: result.rows[0].id }])
+              );
+            resolve(
+              JSON.stringify([
+                { songlink: song1, id: result.rows[0].id },
+                { songlink: song2, id: result.rows[1].id },
+              ])
+            );
           }
         );
       });
@@ -138,8 +145,9 @@ export class SongHandler {
   /**
    * TODO: Add Bulk -> make it possible to delete multiple songs in 1 query
    */
-  private removeSong = async (songlink: string) => {
-    if (!(await this.songExists(songlink))) return;
+  public removeSong = async (songlink: string) => {
+    const exists = await this.songExists(songlink);
+    if (exists) return;
     const db = await connectToDb();
     await db.query("DELETE FROM group_songs WHERE songlink=$1 AND id=$2", [
       songlink,

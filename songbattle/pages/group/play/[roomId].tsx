@@ -3,6 +3,7 @@ import { NextRouter, withRouter } from "next/router";
 import React from "react";
 import socketIOClient, { Socket } from "socket.io-client";
 import swal from "sweetalert";
+import { getCookie } from "../../../utils/consts";
 
 interface WithRouterProps {
   router: NextRouter;
@@ -19,9 +20,16 @@ class GroupPlay extends React.Component<GroupPlayProps> {
     reconnectionAttempts: Infinity,
   });
   public state = {
+    isOwner: false,
+    processingVote: false,
     connectedToSocket: false,
     submittedSong: false,
-    queue: [{}],
+    queue: null,
+    songsInQueue: 0,
+    vote1Count: 0,
+    vote2Count: 0,
+    songLink1: "",
+    songLink2: "",
   };
 
   constructor(props) {
@@ -29,7 +37,10 @@ class GroupPlay extends React.Component<GroupPlayProps> {
     this.submitSong = this.submitSong.bind(this);
   }
 
-  //TODO: Check the Cookie
+  /**
+   * TODO: Check the Secret key Cookie
+   * Check if the key in cookie is actually correct when going to the next round
+   */
 
   componentDidMount() {
     this.setState({ connectedToSocket: this.socket.connected });
@@ -37,9 +48,13 @@ class GroupPlay extends React.Component<GroupPlayProps> {
       setTimeout(() => {
         console.log(this.socket.connected);
         this.setState({ connectedToSocket: this.socket.connected });
+        this.socket.emit("join_room", {
+          roomId: this.props.router.query.roomId,
+        });
         this.socket.emit("get_queue", {
           roomId: this.props.router.query.roomId,
         });
+        if (getCookie("secret_key")) this.setState({ isOwner: true });
       }, 2000);
     }
   }
@@ -66,8 +81,24 @@ class GroupPlay extends React.Component<GroupPlayProps> {
         return;
         //maybe dispatch to server and try again or delete?
       }
-      this.setState({ queue: JSON.parse(data.queue) });
+      if (data.songsInQueue > 1) {
+        this.setState({
+          queue: JSON.parse(data.queue),
+          sonsgInQueue: data.songsInQueue,
+          songLink1: JSON.parse(data.queue)[0].songlink,
+          songLink2: JSON.parse(data.queue)[1].songlink,
+        });
+      } else {
+        this.setState({
+          queue: JSON.parse(data.queue),
+          sonsgInQueue: data.songsInQueue,
+          songLink1: JSON.parse(data.queue)[0].songlink,
+          songLink2: "",
+        });
+      }
+      console.log("length: " + data.queue.length);
       console.log(data.queue);
+      console.log("songsInQueue: " + this.state.songsInQueue);
     });
     /*this.socket.on("owner_left_room_leave", () => {
       swal({
@@ -84,6 +115,19 @@ class GroupPlay extends React.Component<GroupPlayProps> {
         title: "Successfully added the Song",
       });
     });
+    this.socket.on("vote_success", () => {
+      this.setState({ processingVote: false });
+    });
+    this.socket.on("update_vote_count", (data: any) => {
+      const songlink = data.songlink;
+      const voteCount = data.voteCount;
+      const { songLink1, songLink2 } = this.state;
+      if (songlink === songLink1) this.setState({ vote1Count: voteCount });
+      else this.setState({ vote2Count: voteCount });
+    });
+    this.socket.on("redirect_win", () =>
+      this.props.router.push("/group/win/" + this.props.router.query.roomId)
+    );
   }
 
   submitSong(e) {
@@ -101,8 +145,78 @@ class GroupPlay extends React.Component<GroupPlayProps> {
     });
   }
 
+  vote1 = async () => {
+    this.socket.emit("vote", {
+      roomId: this.props.router.query.roomId,
+      songlink: this.state.songLink1,
+    });
+    this.setState({ processingVote: true });
+  };
+
+  vote2 = async () => {
+    this.socket.emit("vote", {
+      roomId: this.props.router.query.roomId,
+      songlink: this.state.songLink2,
+    });
+    this.setState({ processingVote: true });
+  };
+
+  nextRound = async () => {
+    const { vote1Count, vote2Count, songsInQueue, songLink1, songLink2 } =
+      this.state;
+    const roomId = this.props.router.query.roomId;
+    if (songsInQueue - 1 <= 0) {
+      this.props.router.push("/group/win/" + roomId);
+      this.socket.emit("win_redirect", {
+        roomId: roomId,
+      });
+      return;
+    }
+    //determine who won
+    if (vote1Count > vote2Count) {
+      this.socket.emit("song_win", {
+        songlink: songLink1,
+        roomId: roomId,
+        remove: songLink2,
+      });
+    } else if (vote2Count > vote1Count) {
+      this.socket.emit("song_win", {
+        songlink: songLink1,
+        roomId: roomId,
+        remove: songLink1,
+      });
+    } else {
+      const randomInt = ~~(Math.random() * 1) + 2;
+      if (randomInt === 1)
+        this.socket.emit("song_win", {
+          songlink: songLink1,
+          roomId: roomId,
+          remove: songLink2,
+        });
+      else
+        this.socket.emit("song_win", {
+          songlink: songLink2,
+          roomId: roomId,
+          remove: songLink1,
+        });
+    }
+    this.socket.emit("get_next_queue", {
+      roomId: this.props.router.query.roomId,
+    });
+  };
+
   render() {
     this.handleIncomingPayload();
+    const {
+      songLink1,
+      songLink2,
+      songsInQueue,
+      queue,
+      processingVote,
+      vote1Count,
+      vote2Count,
+      isOwner,
+    } = this.state;
     return (
       <div className="dark:bg-gray-800">
         <Head>
@@ -110,52 +224,68 @@ class GroupPlay extends React.Component<GroupPlayProps> {
         </Head>
         <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 dark:bg-gray-800">
           <div className="max-w-md w-full space-y-8">
-            {!this.state.connectedToSocket ? (
-              <p className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
-                Connecting to Socket...
-              </p>
-            ) : (
-              ""
-            )}
             <div>
-              {this.state.submittedSong ? (
+              <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
+                {songsInQueue != 0 ? `Songs in Queue: ${songsInQueue - 2}` : ""}
+              </h2>
+            </div>
+            <div>
+              {queue != null ? (
                 <p className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
-                  Waiting for the Owner to start...
+                  <iframe
+                    src={"https://open.spotify.com/embed/track/" + songLink1}
+                    width="300"
+                    height="80"
+                    frameBorder="0"
+                    allow="encrypted-media"
+                  ></iframe>
+                  <button
+                    type="submit"
+                    className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    onClick={this.vote1}
+                  >
+                    {vote1Count} VOTES
+                  </button>
+                  <br />
+                  <iframe
+                    src={"https://open.spotify.com/embed/track/" + songLink2}
+                    width="300"
+                    height="80"
+                    frameBorder="0"
+                    allow="encrypted-media"
+                  ></iframe>
+                  <button
+                    type="submit"
+                    className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    onClick={this.vote2}
+                  >
+                    {vote2Count} VOTES
+                  </button>
                 </p>
               ) : (
-                <form
-                  className="mt-8 space-y-6"
-                  action="#"
-                  method="POST"
-                  onSubmit={this.submitSong}
+                <p className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
+                  Loading...
+                </p>
+              )}
+              {processingVote ? (
+                <p className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
+                  Processing Vote...
+                </p>
+              ) : (
+                ""
+              )}
+              <br />
+              <br />
+              {isOwner ? (
+                <button
+                  type="submit"
+                  className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  onClick={this.nextRound}
                 >
-                  <p className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
-                    Group Waiting Room
-                  </p>
-                  <div>
-                    <label htmlFor="songlink" className="sr-only">
-                      Songlink
-                    </label>
-                    <input
-                      id="songlink"
-                      name="songlink"
-                      type="text"
-                      autoComplete="text"
-                      className="dark:bg-gray-800 dark:text-white appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                      placeholder="Songlink"
-                    />
-                  </div>
-                  <div>
-                    <div className="flex flex-row">
-                      <button
-                        type="submit"
-                        className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                      >
-                        CREATE
-                      </button>
-                    </div>
-                  </div>
-                </form>
+                  Next Round
+                </button>
+              ) : (
+                ""
               )}
             </div>
           </div>

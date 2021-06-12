@@ -87,6 +87,16 @@ class GroupWaiting extends React.Component<GroupWaitingProps> {
 
   submitSong(e) {
     e.preventDefault();
+    const songLink = e.target.songlink.value;
+    if (!songLink.startsWith("https://open.spotify.com/track/")) {
+      swal({
+        icon: "error",
+        text: "The Songlink needs to be a Spotify Link",
+        title: "Songlink not from Spotify",
+      });
+      return;
+    }
+
     if (this.socket === null) {
       swal({
         icon: "warning",
@@ -94,9 +104,10 @@ class GroupWaiting extends React.Component<GroupWaitingProps> {
         text: "Connection to the socket was lost! Please reload the page!",
       });
     }
+
     this.socket.emit("add_song", {
       roomId: this.props.router.query.roomId,
-      songlink: e.target.songlink.value,
+      songlink: songLink,
     });
   }
 
