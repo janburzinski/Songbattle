@@ -79,9 +79,11 @@ const main = async () => {
       const otherSong = data.otherSong;
       const voteHandler = new VoteHandler(data.roomId, socket, otherSong);
       console.log("songThatLost: " + songThatLost);
+      //remove song from postgresql
       await songHandler.removeSong(songThatLost);
+      //remove the votes from the songs
       await voteHandler.removeVote();
-      await voteHandler.removeVote(songThatLost);
+      await voteHandler.removeVote(data.songlink);
       const songsInQueue = await songHandler.getSongsInQueue();
       //emit new queue
       const socketIds = await io.in(data.roomId).allSockets();
