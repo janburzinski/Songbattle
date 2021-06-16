@@ -2,6 +2,7 @@ import { Socket } from "socket.io";
 import { connectToRedis } from "../db/redis";
 import { connectToDb } from "../db/connectToDb";
 import { ErrorTypes } from "../errors/ErrorTypes";
+import { voteCache } from "../";
 
 export class SongHandler {
   private roomId: string;
@@ -33,20 +34,24 @@ export class SongHandler {
       .catch((err) => console.error(err));
   };
 
-  public getQueue = async (clearQueue?: boolean) => {
+  public getQueue = async (clearQueue?: boolean, socketIds?: Set<string>) => {
     const db = await connectToDb();
     const redis = await connectToRedis();
-    return new Promise((resolve, reject) => {
-      if (clearQueue) this.clearQueueCache();
+    return new Promise(async (resolve, reject) => {
+      if (clearQueue) await this.clearQueueCache();
+      if (socketIds != null)
+        socketIds.forEach((id) => voteCache.removeVote(id));
       redis.exists(this.redisName, async (err, exists) => {
         if (err) {
           console.error(err);
           reject(ErrorTypes.GET_QUEUE_ERROR);
+          redis.disconnect();
           return;
         }
         if (exists) {
           const cachedQueue = await this.getCachedQueue();
           resolve(cachedQueue);
+          redis.disconnect();
           return;
         }
         db.query(
@@ -55,28 +60,35 @@ export class SongHandler {
           async (err, result) => {
             if (err) {
               console.error(err);
+              redis.disconnect();
               reject(ErrorTypes.GET_QUEUE_ERROR);
             }
-            const song1 = result.rows[0].songlink
-              .replace("https://open.spotify.com/embed/track/", "")
-              .replace("https://open.spotify.com/track/", "");
+            const song1 = result.rows[0].songlink.replace(
+              "https://open.spotify.com/track/",
+              ""
+            );
             let song2: string = "";
             if (result.rowCount > 1)
-              song2 = result.rows[1].songlink
-                .replace("https://open.spotify.com/embed/track/", "")
-                .replace("https://open.spotify.com/track/", "");
+              song2 = result.rows[1].songlink.replace(
+                "https://open.spotify.com/track/",
+                ""
+              );
             console.log("song1:" + song1);
             console.log("song1:" + song2);
-            if (result.rowCount <= 1)
-              return resolve(
+            if (result.rowCount <= 1) {
+              resolve(
                 JSON.stringify([{ songlink: song1, id: result.rows[0].id }])
               );
+              redis.disconnect();
+              return;
+            }
             resolve(
               JSON.stringify([
                 { songlink: song1, id: result.rows[0].id },
                 { songlink: song2, id: result.rows[1].id },
               ])
             );
+            redis.disconnect();
           }
         );
       });
@@ -85,9 +97,8 @@ export class SongHandler {
 
   public clearQueueCache = async () => {
     const redis = await connectToRedis();
-
     redis
-      .del(`${this.queueRedisPrefix}:${this.roomId}`)
+      .del(this.redisName)
       .then(() => redis.disconnect())
       .catch((err) => console.error(err));
   };
@@ -95,12 +106,7 @@ export class SongHandler {
   public addQueueToCache = async (songs: any[]) => {
     const redis = await connectToRedis();
     redis
-      .set(
-        `${this.queueRedisPrefix}:${this.roomId}`,
-        JSON.stringify(songs),
-        "ex",
-        86400
-      )
+      .set(this.redisName, JSON.stringify(songs), "ex", 86400)
       .then(() => redis.disconnect())
       .catch((err) => console.error("set:" + err));
   };
@@ -108,7 +114,7 @@ export class SongHandler {
   public getCachedQueue = async () => {
     const redis = await connectToRedis();
     return new Promise((resolve, reject) => {
-      redis.get(`${this.queueRedisPrefix}:${this.roomId}`, (err, result) => {
+      redis.get(this.redisName, (err, result) => {
         if (err) {
           console.error(err);
           reject(ErrorTypes.GET_QUEUE_ERROR);
@@ -147,7 +153,7 @@ export class SongHandler {
    */
   public removeSong = async (songlink: string) => {
     const exists = await this.songExists(songlink);
-    if (exists) return;
+    if (!exists) return;
     const db = await connectToDb();
     await db.query("DELETE FROM group_songs WHERE songlink=$1 AND id=$2", [
       songlink,

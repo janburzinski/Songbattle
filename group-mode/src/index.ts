@@ -46,16 +46,15 @@ const main = async () => {
     socket.on("get_owner_secret_key", async (data: any) => {
       const redis = await connectToRedis();
       const roomId = data.roomId;
-      redis.exists(`owner:${roomId}`, (exists) => {
+      redis.exists(`owner:${roomId}`, async (exists) => {
         if (exists) {
           redis.disconnect();
           return;
         }
         const uuid = uuidv4();
-        redis
-          .set(`owner:${roomId}`, uuid, "ex", 86400)
-          .then(() => redis.disconnect());
+        await redis.set(`owner:${roomId}`, uuid, "ex", 86400);
         socket.emit("secret_key", { secret_key: uuid });
+        redis.disconnect();
       });
     });
 
@@ -76,13 +75,18 @@ const main = async () => {
 
     socket.on("get_next_queue", async (data: any) => {
       const songHandler = new SongHandler(socket, data.roomId);
-      const songLink1 = data.songlink1;
-      const songLink2 = data.songlink2;
-      await songHandler.removeSong(songLink1);
-      await songHandler.removeSong(songLink2);
+      const songThatLost = "https://open.spotify.com/track/" + data.songlink;
+      const otherSong = data.otherSong;
+      const voteHandler = new VoteHandler(data.roomId, socket, otherSong);
+      console.log("songThatLost: " + songThatLost);
+      await songHandler.removeSong(songThatLost);
+      await voteHandler.removeVote();
+      await voteHandler.removeVote(songThatLost);
       const songsInQueue = await songHandler.getSongsInQueue();
-      const queue = songHandler.getQueue(true);
-      //remove everyone from vote cache
+      //emit new queue
+      const socketIds = await io.in(data.roomId).allSockets();
+      const queue = await songHandler.getQueue(true, socketIds);
+      console.log("new queue: " + queue);
       socket
         .to(data.roomId)
         .emit("queue", { queue: queue, songsInQueue: songsInQueue });

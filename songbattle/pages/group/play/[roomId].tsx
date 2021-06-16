@@ -3,7 +3,7 @@ import { NextRouter, withRouter } from "next/router";
 import React from "react";
 import socketIOClient, { Socket } from "socket.io-client";
 import swal from "sweetalert";
-import { getCookie } from "../../../utils/consts";
+import { hasCookie } from "../../../utils/consts";
 
 interface WithRouterProps {
   router: NextRouter;
@@ -46,7 +46,6 @@ class GroupPlay extends React.Component<GroupPlayProps> {
     this.setState({ connectedToSocket: this.socket.connected });
     if (!this.socket.connected) {
       setTimeout(() => {
-        console.log(this.socket.connected);
         this.setState({ connectedToSocket: this.socket.connected });
         this.socket.emit("join_room", {
           roomId: this.props.router.query.roomId,
@@ -54,7 +53,8 @@ class GroupPlay extends React.Component<GroupPlayProps> {
         this.socket.emit("get_queue", {
           roomId: this.props.router.query.roomId,
         });
-        if (getCookie("secret_key")) this.setState({ isOwner: true });
+        if (hasCookie("secret_key")) this.setState({ isOwner: true });
+        this.handleIncomingPayload();
       }, 2000);
     }
   }
@@ -81,24 +81,29 @@ class GroupPlay extends React.Component<GroupPlayProps> {
         return;
         //maybe dispatch to server and try again or delete?
       }
-      if (data.songsInQueue > 1) {
+      if (this.state.queue != null)
+        this.setState({
+          queue: null,
+          songsInQueue: 0,
+          songLink1: "",
+          songLink2: "",
+          vote1Count: 0,
+          vote2Count: 0,
+        });
+      if (data.songsInQueue > 1)
         this.setState({
           queue: JSON.parse(data.queue),
-          sonsgInQueue: data.songsInQueue,
+          songsInQueue: data.songsInQueue,
           songLink1: JSON.parse(data.queue)[0].songlink,
           songLink2: JSON.parse(data.queue)[1].songlink,
         });
-      } else {
+      else
         this.setState({
           queue: JSON.parse(data.queue),
-          sonsgInQueue: data.songsInQueue,
+          songsInQueue: data.songsInQueue,
           songLink1: JSON.parse(data.queue)[0].songlink,
           songLink2: "",
         });
-      }
-      console.log("length: " + data.queue.length);
-      console.log(data.queue);
-      console.log("songsInQueue: " + this.state.songsInQueue);
     });
     /*this.socket.on("owner_left_room_leave", () => {
       swal({
@@ -165,13 +170,14 @@ class GroupPlay extends React.Component<GroupPlayProps> {
     const { vote1Count, vote2Count, songsInQueue, songLink1, songLink2 } =
       this.state;
     const roomId = this.props.router.query.roomId;
-    if (songsInQueue - 1 <= 0) {
+    if (songsInQueue - 1 <= 1) {
       this.props.router.push("/group/win/" + roomId);
       this.socket.emit("win_redirect", {
         roomId: roomId,
       });
       return;
     }
+    let losingSong: string;
     //determine who won
     if (vote1Count > vote2Count) {
       this.socket.emit("song_win", {
@@ -179,34 +185,46 @@ class GroupPlay extends React.Component<GroupPlayProps> {
         roomId: roomId,
         remove: songLink2,
       });
+      losingSong = songLink2;
     } else if (vote2Count > vote1Count) {
       this.socket.emit("song_win", {
         songlink: songLink1,
         roomId: roomId,
         remove: songLink1,
       });
+      losingSong = songLink1;
     } else {
       const randomInt = ~~(Math.random() * 1) + 2;
-      if (randomInt === 1)
+      if (randomInt === 1) {
         this.socket.emit("song_win", {
           songlink: songLink1,
           roomId: roomId,
           remove: songLink2,
         });
-      else
+        losingSong = songLink2;
+      } else {
         this.socket.emit("song_win", {
           songlink: songLink2,
           roomId: roomId,
           remove: songLink1,
         });
+        swal({
+          icon: "info",
+          title: "Randomly picking a song!",
+          text: "Random picking a song because its 50/50",
+          timer: 10000,
+        });
+        losingSong = songLink1;
+      }
     }
     this.socket.emit("get_next_queue", {
       roomId: this.props.router.query.roomId,
+      songlink: losingSong,
+      otherSong: losingSong === songLink1 ? songLink2 : songLink1,
     });
   };
 
   render() {
-    this.handleIncomingPayload();
     const {
       songLink1,
       songLink2,

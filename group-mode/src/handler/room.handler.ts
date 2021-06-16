@@ -60,6 +60,7 @@ export class RoomHandler {
     const redis = await connectToRedis();
     userHandler.addSocketIdToList(this.socket.id, this.roomId);
     await redis.incr(this.redisName);
+    await redis.expire(this.redisName, 86400);
     redis.disconnect();
   };
 
@@ -67,6 +68,7 @@ export class RoomHandler {
     if (!this.roomExists()) return;
     const redis = await connectToRedis();
     await redis.decr(this.redisName);
+    await redis.expire(this.redisName, 86400);
     userHandler.removeSocketIdFromList(this.socket.id);
     redis.disconnect();
   };

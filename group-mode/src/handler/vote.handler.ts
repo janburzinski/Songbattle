@@ -32,9 +32,14 @@ export class VoteHandler {
     });
   };
 
-  public removeVote = async () => {
+  public removeVote = async (songlink?: string) => {
     const redis = await connectToRedis();
-    redis.del(this.redisName, () => redis.disconnect());
+    if (songlink != null)
+      redis.del(`vote:${this.roomId}:${songlink}`, () => redis.disconnect());
+    else
+      redis.del(`vote:${this.roomId}:${this.songlink}`, () =>
+        redis.disconnect()
+      );
   };
 
   public getVotes = async (): Promise<number> => {

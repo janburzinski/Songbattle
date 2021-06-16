@@ -23,7 +23,7 @@ export function setCookie(name: string, value: string, days: number) {
   }
   document.cookie = name + "=" + (value || "") + expires + "; path=/";
 }
-export function getCookie(name: string) {
+export function hasCookie(name: string) {
   return document.cookie.split(";").some((c) => {
     return c.trim().startsWith(name + "=");
   });
