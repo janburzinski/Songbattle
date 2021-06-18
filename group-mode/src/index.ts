@@ -37,7 +37,15 @@ const main = async () => {
     /**
      * Win
      */
-    socket.on("win_redirect", (data: any) => {
+    socket.on("win_redirect", async (data: any) => {
+      const otherSong = data.otherSong;
+      const losingSnog = data.songlink;
+      const voteHandler = new VoteHandler(data.roomId, socket, otherSong);
+      const songHandler = new SongHandler(socket, data.roomId);
+      await voteHandler.removeVote();
+      await songHandler.removeSong(
+        "https://open.spotify.com/track/" + losingSnog
+      );
       socket.to(data.roomId).emit("redirect_win");
     });
     /**

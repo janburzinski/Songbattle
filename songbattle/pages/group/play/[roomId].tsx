@@ -170,13 +170,6 @@ class GroupPlay extends React.Component<GroupPlayProps> {
     const { vote1Count, vote2Count, songsInQueue, songLink1, songLink2 } =
       this.state;
     const roomId = this.props.router.query.roomId;
-    if (songsInQueue - 1 <= 1) {
-      this.props.router.push("/group/win/" + roomId);
-      this.socket.emit("win_redirect", {
-        roomId: roomId,
-      });
-      return;
-    }
     let losingSong: string;
     //determine who won
     if (vote1Count > vote2Count) {
@@ -216,6 +209,15 @@ class GroupPlay extends React.Component<GroupPlayProps> {
         });
         losingSong = songLink1;
       }
+    }
+    if (songsInQueue - 1 <= 1) {
+      this.props.router.push("/group/win/" + roomId);
+      this.socket.emit("win_redirect", {
+        roomId: roomId,
+        songlink: losingSong,
+        otherSong: losingSong === songLink1 ? songLink2 : songLink1,
+      });
+      return;
     }
     this.socket.emit("get_next_queue", {
       roomId: this.props.router.query.roomId,
