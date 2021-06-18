@@ -7,27 +7,6 @@ on:
     branches: ["**"]
 
 jobs:
-  container-job:
-    # Containers must run in Linux based operating systems
-    runs-on: ubuntu-latest
-    # Docker Hub image that `container-job` executes in
-    container: node:10.18-jessie
-
-    # Service containers to run with `container-job`
-    services:
-      # Label used to access the service container
-      postgres:
-        # Docker Hub image
-        image: postgres
-        # Provide the password for postgres
-        env:
-          POSTGRES_PASSWORD: postgres
-        # Set health checks to wait until postgres has started
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
   build:
     runs-on: ubuntu-latest
     defaults:
@@ -42,5 +21,20 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
+      - name: Setup Redis
+    # You may pin to the exact commit or the version.
+    # uses: zhulik/redis-action@765216a54a1114f109ce90a1de4775080be16ea5
+        uses: zhulik/redis-action@1.1.0
+      - name: Setup PostgreSQL
+  # You may pin to the exact commit or the version.
+  # uses: Harmon758/postgresql-action@0be19fa37850b22cb4c9bbf28a03abbf44abd863
+        uses: Harmon758/postgresql-action@v1.0.0
+        with:
+          # POSTGRES_DB - name for the default database that is created
+          postgresql db: groupmodeboom
+          # POSTGRES_USER - create the specified user with superuser power
+          postgresql user: songbattle
+          # POSTGRES_PASSWORD - superuser password
+          postgresql password: postgres
       - run: yarn
       - run: yarn test
