@@ -1,12 +1,12 @@
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { parseCookies, url } from "../../../utils/consts";
+import { hasCookie, parseCookies, url } from "../../../utils/consts";
 import swal from "sweetalert";
 import { useCookies } from "react-cookie";
 
 export default function Home({ songlink, roomId }) {
   const router = useRouter();
-  const [_cookies, _setCookie, removeCookie] = useCookies(["user"]);
+  const [_cookies, _setCookie, removeCookie] = useCookies(["secret_key"]);
   const songLink = songlink.replace("https://open.spotify.com/track/", "");
   let alreadySent = false;
 
@@ -34,9 +34,8 @@ export default function Home({ songlink, roomId }) {
   };
 
   // Delete the room
-  // TODO: Delete Room from Postgres
   const deleteRoom = async () => {
-    const res = await fetch(`${url}/api/room/delete`, {
+    const res = await fetch(`${url}/api/group/delete`, {
       body: JSON.stringify({ id: roomId }),
       headers: {
         "Content-Type": "application/json",
@@ -56,14 +55,14 @@ export default function Home({ songlink, roomId }) {
     }
   };
   sendWinStat();
-  //deleteRoom();
+  if (hasCookie("secret_key")) deleteRoom();
 
   const playAgain = () => {
     router.push("../../../");
     return;
   };
 
-  removeCookie("user", { path: "/", sameSite: true });
+  removeCookie("secret_key", { path: "/", sameSite: true });
 
   return (
     <div

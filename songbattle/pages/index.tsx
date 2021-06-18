@@ -1,5 +1,5 @@
 import Head from "next/head";
-import { generateId, url } from "../utils/consts";
+import { generateId, groupModeEnabled, url } from "../utils/consts";
 import { useRouter } from "next/router";
 import { useCookies } from "react-cookie";
 import { useState } from "react";
@@ -40,8 +40,8 @@ export default function Home() {
       return;
     }
 
-    updateLoadingState();
     if (!groupMode) {
+      updateLoadingState();
       const res = await fetch(`${url}/api/room/create`, {
         body: JSON.stringify({ owner: username }),
         headers: {
@@ -58,6 +58,15 @@ export default function Home() {
       });
       router.push("/room/waiting/" + result.id);
     } else {
+      if (!groupModeEnabled) {
+        swal({
+          icon: "error",
+          title: "Group Mode not enabled",
+          text: "The Group Mode is sadly not enabled, because I can't afford paying for servers",
+        });
+        return;
+      }
+      updateLoadingState();
       const res = await fetch(`${url}/api/group/create`, {
         body: JSON.stringify({ owner: username }),
         headers: {
@@ -66,13 +75,13 @@ export default function Home() {
         method: "post",
       });
       const result = await res.json();
-      if (result != null) updateLoadingState();
+      if (result.created) updateLoadingState();
       setCookie("user", result.secretId, {
         path: "/",
         maxAge: 3600, //should be 1 hours or something like that
         sameSite: true,
       });
-      router.push("/group/" + result.id);
+      router.push(`/group/${result.id}`);
     }
   };
 

@@ -25,6 +25,10 @@ export class VoteCache {
     this.votes.delete(socketId);
   }
 
+  public getVoteObject(socketId: string) {
+    return this.votes.get(socketId);
+  }
+
   public hasVoted(socketId: string) {
     return this.votes.has(socketId);
   }

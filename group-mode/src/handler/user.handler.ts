@@ -44,4 +44,8 @@ export class UserHandler {
   public clearList = () => {
     this.users.clear();
   };
+
+  public clearOwnerList = () => {
+    this.owners.clear();
+  };
 }

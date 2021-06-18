@@ -56,6 +56,7 @@ export class RoomCache {
   };
 
   public getRoom = async (roomId: string) => {
+    console.log(this.rooms.get(roomId)?.id);
     return this.rooms.get(roomId);
   };
 

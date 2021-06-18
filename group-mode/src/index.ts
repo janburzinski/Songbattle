@@ -186,8 +186,8 @@ const main = async () => {
       socket.leave(data.roomId);
       await roomHandler.leaveRoom();
       if (socket.rooms.size === 0) {
-        await roomHandler.deleteRoomCache();
-        //TODO: Delete Entry from Postgres
+        // TODO: Find a better way to determine the size of the room since redis is not working atm
+        //await roomHandler.deleteRoomCache();
       }
     });
 
@@ -218,8 +218,8 @@ const main = async () => {
       socket.leave(roomId!);
       socket.disconnect(true);
       if (socket.rooms.size === 0) {
-        await roomHandler.deleteRoomCache();
-        //TODO: Delete Entry from Postgres
+        //TODO: Work out better way to determine size of room
+        //await roomHandler.deleteRoomCache();
       }
     });
 
@@ -243,10 +243,10 @@ const main = async () => {
       });
 
       socket.on("owner_left_room", async (data: any) => {
-        console.log("OWNER LEFT ROOM ÄLJNSDFGLKJHNSDGDFKLJMGN");
-        const roomHandler = new RoomHandler(socket, data.roomId);
-        socket.to(data.roomId).emit("owner_left_room_leave");
-        roomHandler.deleteRoomCache();
+        //console.log("OWNER LEFT ROOM ÄLJNSDFGLKJHNSDGDFKLJMGN");
+        //const roomHandler = new RoomHandler(socket, data.roomId);
+        //socket.to(data.roomId).emit("owner_left_room_leave");
+        // roomHandler.deleteRoomCache();
         //TODO: Delete Entry in Postgres
       });
     });
