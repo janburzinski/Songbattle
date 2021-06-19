@@ -3,12 +3,13 @@ import { Client } from "pg";
 let cachedClient: Client;
 
 export const connectToDb = async (
+  test = false,
   host = process.env.DB_HOST,
   user = process.env.DB_USER,
   database = process.env.DB_DATABASE,
   password = process.env.DB_PASSWORD
 ) => {
-  if (cachedClient) return cachedClient;
+  if (cachedClient && !test) return cachedClient;
 
   const client = new Client({
     host: host,
