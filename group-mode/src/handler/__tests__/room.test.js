@@ -28,6 +28,7 @@ describe("Room Handler", () => {
     });
     redis.connect(() => {
       const status1 = redis.status;
+      postgres.end();
       redis.disconnect();
       expect(redis).toBeDefined();
       expect(status1).toBe("connecting");
