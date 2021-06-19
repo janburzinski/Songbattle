@@ -242,13 +242,13 @@ const main = async () => {
         });
       });
 
-      socket.on("owner_left_room", async (data: any) => {
+      /*socket.on("owner_left_room", async (data: any) => {
         //console.log("OWNER LEFT ROOM ÄLJNSDFGLKJHNSDGDFKLJMGN");
         //const roomHandler = new RoomHandler(socket, data.roomId);
         //socket.to(data.roomId).emit("owner_left_room_leave");
         // roomHandler.deleteRoomCache();
         //TODO: Delete Entry in Postgres
-      });
+      });*/
     });
   });
   io.setMaxListeners(0);

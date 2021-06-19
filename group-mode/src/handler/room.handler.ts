@@ -26,6 +26,7 @@ export class RoomHandler {
     userHandler.addOwner(this.socket.id, this.roomId);
     roomCache.addRoomToCache(new Room(this.roomId, this.socket.id));
     redis.disconnect();
+    console.log("socketId: " + this.socket.id);
   };
 
   public deleteRoomCache = async () => {
