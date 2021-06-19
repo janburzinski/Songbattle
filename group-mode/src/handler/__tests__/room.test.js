@@ -21,7 +21,7 @@ describe("Room Handler", () => {
 
   test("test database connection", async () => {
     const redis = await connectToRedis();
-    const postgres = await connectToDb();
+    const postgres = await connectToDb(true);
     let error = null;
     postgres.connect((err) => {
       error = err;

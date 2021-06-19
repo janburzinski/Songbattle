@@ -16,6 +16,7 @@ export const connectToDb = async (
     user: user,
     database: database,
     password: password,
+    connectionTimeoutMillis: 0,
   });
 
   client.connect();
