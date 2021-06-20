@@ -107,6 +107,7 @@ export class RoomSocket {
             secret_key: "error while getting secret key",
             roomId: roomId,
           });
+          redis.disconnect();
           return;
         }
         if (exists) {
@@ -115,6 +116,7 @@ export class RoomSocket {
             secret_key: "",
             roomId: roomId,
           });
+          redis.disconnect();
           return;
         }
         const uuid = uuidv4();

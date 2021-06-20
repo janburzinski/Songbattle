@@ -206,4 +206,17 @@ describe("Room Handler", () => {
     expect(parseInt(redisEntry)).toEqual(2);
     expect(parseInt(redisEntryAfter)).toEqual(1);
   });
+
+  test("create secret key and check it", async () => {
+    const redis = await connectToRedis();
+    const status = redis.status;
+    const userHandler = new UserHandler.UserHandler();
+    //in the actual code its a uuid
+    const key = generate();
+    await redis.set(`owner:${roomId}`, key, "ex", 1000);
+    const checkKey = await userHandler.checkSecretKey(key, roomId);
+    redis.disconnect();
+    expect(checkKey).toBeTruthy();
+    expect(status).toBe("connecting");
+  });
 });
