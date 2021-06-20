@@ -40,6 +40,15 @@ export default function Home() {
       return;
     }
 
+    if (username.length > 25) {
+      swal({
+        icon: "error",
+        text: "The Username has a 25 character limit",
+        title: "Username too long",
+      });
+      return;
+    }
+
     if (!groupMode) {
       updateLoadingState();
       const res = await fetch(`${url}/api/room/create`, {
