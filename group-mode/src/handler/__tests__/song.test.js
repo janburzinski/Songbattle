@@ -20,6 +20,9 @@ describe("Song Handler", () => {
 
   test("add song", async () => {
     const postgres = await connectToDb(true);
+    postgres.connect((err) => {
+      error = err;
+    });
     let error = null;
     let databaseEntry;
     let rowCount;
@@ -54,6 +57,10 @@ describe("Song Handler", () => {
 
   test("get queue", async () => {
     const postgres = await connectToDb(true);
+    let error = null;
+    postgres.connect((err) => {
+      error = err;
+    });
     let query = null;
     let queryRowCount = 0;
     let songlinks = [];
@@ -78,7 +85,9 @@ describe("Song Handler", () => {
         queryRowCount = r.rowCount;
       });
     console.log("queryRowCount:" + queryRowCount);
+    postgres.end();
 
+    expect(error).toBeNull();
     expect(queryRowCount).toBeGreaterThanOrEqual(6);
     for (let i = 0; i < 6; i++) {
       expect(query[i].id).toBe(id);

@@ -18,7 +18,11 @@ export class RoomHandler {
   }
 
   public createRoomCache = async () => {
-    if (roomCache.isCached(this.roomId)) return; // TODO: do something about it
+    if (roomCache.isCached(this.roomId)) {
+      this.socket.emit("room_already_exists");
+      this.socket.to(this.roomId).emit("room_already_exists");
+      return;
+    }
     const redis = await connectToRedis();
     console.log("roomId:" + this.roomId);
     await redis.set(this.redisName, 1, "ex", 86400); // expire after 1 day
@@ -31,6 +35,7 @@ export class RoomHandler {
 
   public deleteRoomCache = async () => {
     if (!this.roomExists()) return;
+    console.log("iudfghnb dlfjkhgbdfslhkjbfdhg");
     const redis = await connectToRedis();
     await redis.del(this.redisName);
     userHandler.removeSocketIdFromList(this.socket.id);
@@ -79,10 +84,10 @@ export class RoomHandler {
     let userCount: number = 1;
     return new Promise((resolve, _reject) => {
       redis.get(this.redisName).then((result) => {
-        if (result === null || result === "") resolve(userCount);
+        if (result === null || result === "") return resolve(userCount);
         console.log("userCountResult: " + result);
         try {
-          resolve(parseInt(result!));
+          resolve(parseInt(result!) + 1);
         } catch (err) {
           console.error(err);
           resolve(userCount);

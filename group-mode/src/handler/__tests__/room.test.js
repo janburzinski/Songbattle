@@ -32,13 +32,17 @@ describe("Room Handler", () => {
       redis.disconnect();
       expect(redis).toBeDefined();
       expect(status1).toBe("connecting");
-      expect(error).toBe(null);
+      expect(error).toBeNull();
     });
   });
 
   test("create room cache", async () => {
     const redis = await connectToRedis();
     const postgres = await connectToDb(true);
+    let error = null;
+    postgres.connect((err) => {
+      error = err;
+    });
     const redisStatus = redis.status;
     const roomCache = new RoomCache.RoomCache();
     const userHandler = new UserHandler.UserHandler();
@@ -68,11 +72,16 @@ describe("Room Handler", () => {
     expect(roomCache.rooms.size).toBe(1);
     expect(userHandler.owners.size).toBe(1);
     expect(parseInt(redisEntry)).toEqual(1);
+    expect(error).toBeNull();
   });
 
   test("create room cache and delete it", async () => {
     const redis = await connectToRedis();
     const postgres = await connectToDb(true);
+    let error = null;
+    postgres.connect((err) => {
+      error = err;
+    });
     const redisStatus = redis.status;
     const roomCache = new RoomCache.RoomCache();
     const userHandler = new UserHandler.UserHandler();
@@ -126,6 +135,7 @@ describe("Room Handler", () => {
     expect(postgresEntry).toBeDefined();
     expect(postgresEntry[0].id).toBe(roomId);
     expect(postgresEntry[0].owner).toBe(owner);
+    expect(error).toBeNull();
   });
 
   test("join room", async () => {

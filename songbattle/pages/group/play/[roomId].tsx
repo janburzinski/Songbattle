@@ -133,6 +133,22 @@ class GroupPlay extends React.Component<GroupPlayProps> {
     this.socket.on("redirect_win", () =>
       this.props.router.push("/group/win/" + this.props.router.query.roomId)
     );
+    this.socket.on("destory_room", (data: any) => {
+      swal({
+        icon: "warning",
+        title: "Room destoryed!",
+        text: data.text,
+      });
+      this.props.router.push("/");
+    });
+    this.socket.on("room_already_exists", (data: any) => {
+      swal({
+        icon: "warning",
+        title: "Room already exists!",
+        text: "I don't know how this is possible but it happened",
+      });
+      this.props.router.push("/");
+    });
   }
 
   submitSong(e) {
