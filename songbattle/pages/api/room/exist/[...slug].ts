@@ -21,6 +21,21 @@ export default async (req: VercelRequest, res: VercelResponse) => {
       const userCookie = req.cookies.user;
       if (userCookie === null || userCookie === "undefined")
         return res.status(200).send({ exist: false });
+
+      //check if groupmode
+      if (slug[2] != null && slug[2] === "group") {
+        db.query("SELECT secretid FROM groups WHERE id=$1", [id], (err, r) => {
+          if (err || r.rowCount <= 0) {
+            return res.status(200).send({ exist: false });
+          }
+          if (r.rows[0].secretid === userCookie && r.rowCount >= 0) {
+            return res.status(200).send({ exist: true });
+          } else {
+            return res.status(200).send({ exist: false });
+          }
+        });
+        return;
+      }
       db.query("SELECT secretid FROM room WHERE id=$1", [id], (err, r) => {
         if (err || r.rowCount <= 0) {
           return res.status(200).send({ exist: false });

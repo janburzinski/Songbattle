@@ -1,5 +1,5 @@
 import Head from "next/head";
-import { generateId, url } from "../utils/consts";
+import { generateId, groupModeEnabled, url } from "../utils/consts";
 import { useRouter } from "next/router";
 import { useCookies } from "react-cookie";
 import { useState } from "react";
@@ -9,9 +9,14 @@ export default function Home() {
   const router = useRouter();
   const [cookie, setCookie] = useCookies(["user"]);
   const [loading, setLoading] = useState(false);
+  const [groupMode, setGroupMode] = useState(false);
 
   const updateLoadingState = () => {
     setLoading(!loading);
+  };
+
+  const handleGroupModeChange = (e) => {
+    setGroupMode(e.target.checked);
   };
 
   const createRoom = async (e) => {
@@ -35,22 +40,49 @@ export default function Home() {
       return;
     }
 
-    updateLoadingState();
-    const res = await fetch(`${url}/api/room/create`, {
-      body: JSON.stringify({ owner: username }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-      method: "post",
-    });
-    const result = await res.json();
-    if (result != null) updateLoadingState();
-    setCookie("user", result.secretId, {
-      path: "/",
-      maxAge: 3600, //should be 1 hours or something like that
-      sameSite: true,
-    });
-    router.push("/room/waiting/" + result.id);
+    if (!groupMode) {
+      updateLoadingState();
+      const res = await fetch(`${url}/api/room/create`, {
+        body: JSON.stringify({ owner: username }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "post",
+      });
+      const result = await res.json();
+      if (result != null) updateLoadingState();
+      setCookie("user", result.secretId, {
+        path: "/",
+        maxAge: 3600, //should be 1 hours or something like that
+        sameSite: true,
+      });
+      router.push("/room/waiting/" + result.id);
+    } else {
+      if (!groupModeEnabled) {
+        swal({
+          icon: "error",
+          title: "Group Mode not enabled",
+          text: "The Group Mode is sadly not enabled, because I can't afford paying for servers",
+        });
+        return;
+      }
+      updateLoadingState();
+      const res = await fetch(`${url}/api/group/create`, {
+        body: JSON.stringify({ owner: username }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "post",
+      });
+      const result = await res.json();
+      if (result.created) updateLoadingState();
+      setCookie("user", result.secretId, {
+        path: "/",
+        maxAge: 3600, //should be 1 hours or something like that
+        sameSite: true,
+      });
+      router.push(`/group/${result.id}`);
+    }
   };
 
   const startFreeplay = async (e) => {
@@ -143,6 +175,31 @@ export default function Home() {
                 >
                   LEADERBOARD
                 </button>
+              </div>
+              <div className="mt-4 space-y-4">
+                <div className="flex items-start">
+                  <div className="flex items-center h-5">
+                    <input
+                      id="comments"
+                      name="comments"
+                      type="checkbox"
+                      className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                      defaultChecked={groupMode}
+                      onChange={handleGroupModeChange}
+                    />
+                  </div>
+                  <div className="ml-3 text-sm">
+                    <label
+                      htmlFor="comments"
+                      className="font-medium text-white"
+                    >
+                      Group Mode
+                    </label>
+                    <p className="text-gray-200">
+                      Play with other people and vote together!
+                    </p>
+                  </div>
+                </div>
               </div>
             </form>
           ) : (
