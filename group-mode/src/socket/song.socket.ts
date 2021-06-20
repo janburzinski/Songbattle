@@ -1,6 +1,7 @@
 import { SongHandler } from "../handler/song.handler";
 import { Socket } from "socket.io";
 import { ErrorTypes } from "../errors/ErrorTypes";
+import { UserHandler } from "../handler/user.handler";
 
 export class SongSocket {
   private socket: Socket;
@@ -24,6 +25,10 @@ export class SongSocket {
 
     this.socket.on("start_game", async (data: any) => {
       const roomId = data.roomId;
+      const secretKey = data.secretKey;
+      const userHandler = new UserHandler();
+      const correctKey = await userHandler.checkSecretKey(secretKey, roomId);
+      if (!correctKey) return;
       const songHandler = new SongHandler(this.socket, data.roomId);
       const songCount = await songHandler.getSongsInQueue();
       console.log("songCount startGame: " + songCount);

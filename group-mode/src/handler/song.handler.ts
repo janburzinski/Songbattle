@@ -1,5 +1,5 @@
 import { Socket } from "socket.io";
-import { connectToRedis } from "../db/redis";
+import { connectToRedis, REDIS_EXPIRE_TIME } from "../db/redis";
 import { connectToDb } from "../db/connectToDb";
 import { ErrorTypes } from "../errors/ErrorTypes";
 import { voteCache } from "../";
@@ -106,7 +106,7 @@ export class SongHandler {
   public addQueueToCache = async (songs: any[]) => {
     const redis = await connectToRedis();
     redis
-      .set(this.redisName, JSON.stringify(songs), "ex", 86400)
+      .set(this.redisName, JSON.stringify(songs), "ex", REDIS_EXPIRE_TIME)
       .then(() => redis.disconnect())
       .catch((err) => console.error("set:" + err));
   };

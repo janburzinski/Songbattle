@@ -1,6 +1,6 @@
 import Head from "next/head";
 import { NextRouter, useRouter, withRouter } from "next/router";
-import { setCookie, url } from "../../utils/consts";
+import { getCookie, removeCookie, setCookie, url } from "../../utils/consts";
 import React from "react";
 import socketIOClient, { Socket } from "socket.io-client";
 import swal from "sweetalert";
@@ -34,6 +34,7 @@ class GroupWaiting extends React.Component<GroupWaitingProps> {
   //TODO: Check the Cookie
 
   componentDidMount() {
+    setCookie("secret_key", "not set", 1);
     this.setState({ connectedToSocket: this.socket.connected });
     this.setupBeforeUnloadListener();
     if (!this.socket.connected) {
@@ -65,25 +66,34 @@ class GroupWaiting extends React.Component<GroupWaitingProps> {
   }
 
   componentWillUnmount() {
-    this.socket.emit("owner_left_room", {
+    /*this.socket.emit("owner_left_room", {
       roomId: this.props.router.query.roomId,
-    });
+    });*/
     this.socket.disconnect();
   }
 
   public handleIncomingPayload() {
-    this.socket.on("secret_key", (data: any) => {
+    this.socket.on("secret_key", async (data: any) => {
+      console.log("secret_key: " + data.secret_key);
       console.log(data.secret_key);
+      removeCookie("secret_key");
       setCookie("secret_key", data.secret_key, 1);
+      const f = await fetch(`${url}/api/group/secure/${data.roomId}`);
+      const res = await f.json();
+      console.log("dfkgjhn:" + res.exist);
+      if (!res.exist) this.props.router.push("/");
     });
+
     this.socket.on("update_user_count", (data: any) => {
       this.setState({ usersInQueue: parseInt(data.userCount) });
       if (data.songCount != this.state.songsInQueue && data.songCount != null)
         this.setState({ songsInQueue: data.songCount });
     });
+
     this.socket.on("update_song_count", (data: any) => {
       this.setState({ songsInQueue: parseInt(data.songCount) });
     });
+
     this.socket.on("start_game_error", (data: any) => {
       swal({
         icon: "error",
@@ -91,6 +101,7 @@ class GroupWaiting extends React.Component<GroupWaitingProps> {
         text: data.error,
       });
     });
+
     this.socket.on("start_game_redirect", () =>
       this.props.router.push("/group/play/" + this.props.router.query.roomId)
     );
@@ -102,6 +113,7 @@ class GroupWaiting extends React.Component<GroupWaitingProps> {
     if (this.socket === null) return;
     this.socket.emit("start_game", {
       roomId: roomId,
+      secretKey: getCookie("secret_key"),
     });
   }
 

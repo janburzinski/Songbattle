@@ -1,6 +1,7 @@
 import Redis from "ioredis";
 require("dotenv").config();
 
+export const REDIS_EXPIRE_TIME = 86400;
 export const connectToRedis = async (
   host = process.env.REDIS_HOST,
   password = process.env.REDIS_PASSWORD,

@@ -1,7 +1,7 @@
 import { Socket } from "socket.io";
 import { Room } from "../cache/room.cache";
 import { connectToDb } from "../db/connectToDb";
-import { connectToRedis } from "../db/redis";
+import { connectToRedis, REDIS_EXPIRE_TIME } from "../db/redis";
 import { roomCache, userHandler } from "../index";
 
 export class RoomHandler {
@@ -25,7 +25,7 @@ export class RoomHandler {
     }
     const redis = await connectToRedis();
     console.log("roomId:" + this.roomId);
-    await redis.set(this.redisName, 1, "ex", 86400); // expire after 1 day
+    await redis.set(this.redisName, 1, "ex", REDIS_EXPIRE_TIME); // expire after 1 day
     userHandler.addSocketIdToList(this.socket.id, this.roomId);
     userHandler.addOwner(this.socket.id, this.roomId);
     roomCache.addRoomToCache(new Room(this.roomId, this.socket.id));
@@ -66,7 +66,7 @@ export class RoomHandler {
     const redis = await connectToRedis();
     userHandler.addSocketIdToList(this.socket.id, this.roomId);
     await redis.incr(this.redisName);
-    await redis.expire(this.redisName, 86400);
+    await redis.expire(this.redisName, REDIS_EXPIRE_TIME);
     redis.disconnect();
   };
 
@@ -74,7 +74,7 @@ export class RoomHandler {
     if (!this.roomExists()) return;
     const redis = await connectToRedis();
     await redis.decr(this.redisName);
-    await redis.expire(this.redisName, 86400);
+    await redis.expire(this.redisName, REDIS_EXPIRE_TIME);
     userHandler.removeSocketIdFromList(this.socket.id);
     redis.disconnect();
   };

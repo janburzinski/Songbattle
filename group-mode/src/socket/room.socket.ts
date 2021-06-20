@@ -2,7 +2,7 @@ import { RoomHandler } from "../handler/room.handler";
 import { Socket } from "socket.io";
 import { userHandler } from "../";
 import { SongHandler } from "../handler/song.handler";
-import { connectToRedis } from "../db/redis";
+import { connectToRedis, REDIS_EXPIRE_TIME } from "../db/redis";
 import { v4 as uuidv4 } from "uuid";
 
 export class RoomSocket {
@@ -80,10 +80,6 @@ export class RoomSocket {
       }
     });
 
-    this.socket.on("start_game", async (data: any) => {
-      console.log("Start Game " + data.roomId);
-    });
-
     this.socket.on("create_room", async (data: any) => {
       console.log(this.socket.id + " created " + data.roomId);
       const roomHandler = new RoomHandler(this.socket, data.roomId);
@@ -103,14 +99,31 @@ export class RoomSocket {
     this.socket.on("get_owner_secret_key", async (data: any) => {
       const redis = await connectToRedis();
       const roomId = data.roomId;
-      redis.exists(`owner:${roomId}`, async (exists) => {
+      redis.exists(`owner:${roomId}`, async (err, exists) => {
+        if (err) {
+          console.log(err);
+          this.socket.emit("secret_key", {
+            exists: true,
+            secret_key: "error while getting secret key",
+            roomId: roomId,
+          });
+          return;
+        }
         if (exists) {
-          redis.disconnect();
+          this.socket.emit("secret_key", {
+            exists: true,
+            secret_key: "",
+            roomId: roomId,
+          });
           return;
         }
         const uuid = uuidv4();
-        await redis.set(`owner:${roomId}`, uuid, "ex", 86400);
-        this.socket.emit("secret_key", { secret_key: uuid });
+        await redis.set(`owner:${roomId}`, uuid, "ex", REDIS_EXPIRE_TIME);
+        this.socket.emit("secret_key", {
+          exists: false,
+          secret_key: uuid,
+          roomId: roomId,
+        });
         redis.disconnect();
       });
     });

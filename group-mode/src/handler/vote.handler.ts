@@ -1,7 +1,7 @@
 import { Socket } from "socket.io";
 import { Vote } from "../cache/vote.cache";
 import { voteCache } from "../";
-import { connectToRedis } from "../db/redis";
+import { connectToRedis, REDIS_EXPIRE_TIME } from "../db/redis";
 
 export class VoteHandler {
   private roomId: string;
@@ -24,7 +24,7 @@ export class VoteHandler {
         voteCache.addVote(voteObj);
         const prevVotes = await this.getVotes();
         await redis
-          .set(this.redisName, prevVotes + 1, "ex", 10800)
+          .set(this.redisName, prevVotes + 1, "ex", REDIS_EXPIRE_TIME)
           .then(() => redis.disconnect());
         resolve(true);
       }

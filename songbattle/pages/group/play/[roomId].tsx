@@ -3,7 +3,7 @@ import { NextRouter, withRouter } from "next/router";
 import React from "react";
 import socketIOClient, { Socket } from "socket.io-client";
 import swal from "sweetalert";
-import { hasCookie } from "../../../utils/consts";
+import { getCookie, hasCookie } from "../../../utils/consts";
 
 interface WithRouterProps {
   router: NextRouter;

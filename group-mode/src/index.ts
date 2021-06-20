@@ -18,7 +18,6 @@ export let voteCache: VoteCache;
 
 /**
  * TODO: Socket Authetication
- * TODO: make redis timneout times consistent
  */
 
 const main = async () => {

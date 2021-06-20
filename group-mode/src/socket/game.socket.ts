@@ -27,6 +27,7 @@ export class GameSocket {
       );
       this.socket.to(data.roomId).emit("redirect_win");
     });
+
     this.socket.on("get_queue", async (data: any) => {
       const songHandler = new SongHandler(this.socket, data.roomId);
       const queue = await songHandler.getQueue();
@@ -60,9 +61,6 @@ export class GameSocket {
       this.socket.emit("queue", { queue: queue, songsInQueue: songsInQueue });
     });
 
-    /**
-     * Vote
-     */
     this.socket.on("vote", async (data: any) => {
       const roomId = data.roomId;
       console.log("roomId:" + roomId);
