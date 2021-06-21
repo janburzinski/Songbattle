@@ -17,7 +17,10 @@ export default async (req: VercelRequest, res: VercelResponse) => {
       "CREATE TABLE songs(id varchar(400) UNIQUE, songlink varchar(400), username varchar(400))"
     );*/
     db.query("SELECT * FROM songs WHERE id=$1 LIMIT 2", [id])
-      .then((r) => res.send({ info: r.rows }))
+      .then((r) => {
+        console.log("rows: " + r.rows);
+        res.send({ info: r.rows });
+      })
       .catch((err) =>
         res.status(400).send({ added: false, message: err.stack })
       );

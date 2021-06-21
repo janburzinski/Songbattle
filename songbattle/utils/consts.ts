@@ -9,7 +9,7 @@ export const url = __prod__
 export const socketURL = __prod__
   ? "http://localhost:3000"
   : "http://localhost:3000";
-export const generateId = (): String => {
+export const generateId = (): string => {
   return uuidv4();
 };
 export const parseCookies = (req) => {

@@ -6,6 +6,44 @@ import { connectToRedis } from "../../../../utils/connectToRedis";
 
 const redisKey = `freeplay:songs`;
 
+const getSongs = async (roomId: string, owner: string): Promise<any> => {
+  return new Promise(async (resolve, _reject) => {
+    let songs: any = [];
+    //rapcaviar
+    const playlist_id = "37i9dQZF1DX0XUsuxWHRQd";
+    const playlistItemsFetch = await fetch(
+      `https://api.spotify.com/v1/playlists/${playlist_id}/tracks?market=DE`,
+      {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          Authorization: `Bearer ${process.env.SPOTIFY_OAUTH_TOKEN}`,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+      }
+    );
+    const playlistSongs = await playlistItemsFetch.json();
+    //console.log(playlistSongs);
+    for (let i = 0; i < 50; i++) {
+      try {
+        //@ts-ignore
+        const obj = [
+          roomId,
+          playlistSongs.items[i].track.external_urls.spotify,
+          owner,
+        ];
+        //@ts-ignore
+        songs.push(obj);
+      } catch (err) {
+        console.log(err);
+      }
+    }
+    resolve(songs);
+    return;
+  });
+};
+
 export default async (req: VercelRequest, res: VercelResponse) => {
   if (req.method.toLowerCase() === "post") {
     const owner = req.body.owner;
@@ -20,49 +58,7 @@ export default async (req: VercelRequest, res: VercelResponse) => {
       return;
     }
     const db = await connectToDb();
-    const redis = await connectToRedis();
-    let songs: any = [];
-
-    const exists = await redis.exists(redisKey);
-    if (exists) {
-      redis.get(redisKey, (err, result) => {
-        if (err) console.log(err);
-        songs = JSON.parse(result);
-      });
-    } else {
-      //rapcaviar
-      const playlist_id = "37i9dQZF1DX0XUsuxWHRQd";
-      const playlistItemsFetch = await fetch(
-        `https://api.spotify.com/v1/playlists/${playlist_id}/tracks?market=DE`,
-        {
-          method: "GET",
-          credentials: "include",
-          headers: {
-            Authorization: `Bearer ${process.env.SPOTIFY_OAUTH_TOKEN}`,
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-        }
-      );
-      const playlistSongs = await playlistItemsFetch.json();
-      for (let i = 0; i < 50; i++) {
-        try {
-          //@ts-ignore
-          const obj = [
-            id,
-            playlistSongs.items[i].track.external_urls.spotify,
-            owner,
-          ];
-          //@ts-ignore
-          songs.push(obj);
-        } catch (err) {
-          console.log(err);
-        }
-      }
-      await redis.set(redisKey, JSON.stringify(songs), "ex", 604800); // 1 week
-    }
-
-    console.log("songs: " + songs);
+    const songs = await getSongs(id, owner);
 
     const randomPickedSongs = songs
       .sort(() => 0.5 - Math.random())
