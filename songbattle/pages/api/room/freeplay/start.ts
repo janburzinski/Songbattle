@@ -7,15 +7,13 @@ import SpotifyWebApi from "spotify-web-api-node";
 const redisKey = `freeplay:songs`;
 
 /**
- * Cache songs?
+ * Cache songs?q
  */
 
 //not working
 //why does spotify has to invalidate access tokens after 1 hour :(
 const getSongs = async (roomId: string, owner: string): Promise<any> => {
   return new Promise(async (resolve, _reject) => {
-    console.log(process.env.SPOTIFY_CLIENT_SECRET);
-    console.log(process.env.SPOTIFY_CLIENT_ID);
     let songs: any = [];
     //rapcaviar
     const playlistId = "37i9dQZF1DX0XUsuxWHRQd";
