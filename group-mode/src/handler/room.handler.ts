@@ -10,7 +10,7 @@ export class RoomHandler {
   private redisPrefix: string;
   private redisName: string;
 
-  constructor(socket: Socket, roomId: string | null) {
+  constructor(socket: Socket, roomId: string | undefined) {
     this.socket = socket;
     this.roomId = roomId ?? userHandler.users.get(socket.id)!;
     this.redisPrefix = "room";
@@ -18,7 +18,8 @@ export class RoomHandler {
   }
 
   public createRoomCache = async () => {
-    if (roomCache.isCached(this.roomId)) {
+    const isCached = await roomCache.isCached(this.roomId);
+    if (isCached) {
       this.socket.emit("room_already_exists");
       this.socket.to(this.roomId).emit("room_already_exists");
       return;
@@ -50,7 +51,7 @@ export class RoomHandler {
     await db.query("DELETE FROM groups WHERE id=$1", [this.roomId]);
   };
 
-  public roomExists = async () => {
+  public roomExists = async (): Promise<boolean> => {
     const redis = await connectToRedis();
     return new Promise((resolve, _reject) => {
       redis.exists(this.redisName, (err, r) => {

@@ -87,12 +87,11 @@ export class RoomSocket {
       this.socket.join(data.roomId);
       //send update user count signal
       const songHandler = new SongHandler(this.socket, data.roomId);
-      songHandler.getSongsInQueue().then(async (songCount) => {
-        const userCount = await roomHandler.getUserCount();
-        this.socket.emit("update_user_count", {
-          userCount: userCount,
-          songCount: songCount,
-        });
+      const songsInQueue = await songHandler.getSongsInQueue();
+      const userCount = await roomHandler.getUserCount();
+      this.socket.emit("update_user_count", {
+        userCount: userCount,
+        songCount: songsInQueue,
       });
     });
 
@@ -128,6 +127,20 @@ export class RoomSocket {
         });
         redis.disconnect();
       });
+    });
+
+    this.socket.on("failed_to_request_song", async (data: any) => {
+      const roomId = data.roomId;
+      if (!roomId) return;
+      const roomHandler = new RoomHandler(this.socket, roomId);
+      await roomHandler.deleteRoom();
+      await roomHandler.deleteRoomCache();
+    });
+
+    this.socket.on("redirect_all", (data: any) => {
+      const roomId = data.roomId;
+      if (!roomId) return;
+      this.socket.to(roomId).emit("redirect_all");
     });
   }
 }

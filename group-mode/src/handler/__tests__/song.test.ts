@@ -1,17 +1,15 @@
-const { connectToDb } = require("../../db/connectToDb");
-const { connectToRedis } = require("../../db/redis");
+import { connectToDb } from "../../db/connectToDb";
 require("dotenv").config();
-let id;
-let songlink;
-let username;
-
-const generate = () => {
-  return (
-    new Date().getTime().toString(36) + Math.random().toString(36).slice(2)
-  );
-};
 
 describe("Song Handler", () => {
+  let id: string, songlink: string, username: string;
+
+  const generate = () => {
+    return (
+      new Date().getTime().toString(36) + Math.random().toString(36).slice(2)
+    );
+  };
+
   beforeEach(() => {
     id = generate();
     songlink = generate();
@@ -20,12 +18,12 @@ describe("Song Handler", () => {
 
   test("add song", async () => {
     const postgres = await connectToDb(true);
-    postgres.connect((err) => {
+    let error: any = null;
+    postgres.connect((err: any) => {
       error = err;
     });
-    let error = null;
-    let databaseEntry;
-    let rowCount;
+    let databaseEntry: any;
+    let rowCount: any;
     await postgres.query(
       "CREATE TABLE IF NOT EXISTS group_songs(id varchar(400), songlink varchar(400), username varchar(400))"
     );
@@ -58,11 +56,11 @@ describe("Song Handler", () => {
   test("get queue", async () => {
     const postgres = await connectToDb(true);
     let error = null;
-    postgres.connect((err) => {
+    postgres.connect((err: any) => {
       error = err;
     });
-    let query = null;
-    let queryRowCount = 0;
+    let query: any = null;
+    let queryRowCount: number = 0;
     let songlinks = [];
     let usernames = [];
     await postgres.query(

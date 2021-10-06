@@ -7,7 +7,7 @@ import SpotifyWebApi from "spotify-web-api-node";
 const redisKey = `freeplay:songs`;
 
 /**
- * Cache songs?q
+ * Cache songs?
  */
 
 //not working

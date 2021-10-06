@@ -73,13 +73,19 @@ class GroupPlay extends React.Component<GroupPlayProps> {
         data.queue === "Error while getting the songs in queue!" ||
         data.queue === null
       ) {
+        this.socket.emit("failed_to_request_song", {
+          roomId: this.props.router.query.roomId,
+        });
+        this.socket.emit("redirect_all", {
+          roomId: this.props.router.query.roomId,
+        });
         swal({
           icon: "error",
           text: "An Error occurred while getting the songs in queue!",
           title: "Error while getting Queue",
         });
+        this.props.router.push("/");
         return;
-        //maybe dispatch to server and try again or delete?
       }
       if (this.state.queue != null)
         this.setState({
@@ -126,13 +132,14 @@ class GroupPlay extends React.Component<GroupPlayProps> {
     this.socket.on("update_vote_count", (data: any) => {
       const songlink = data.songlink;
       const voteCount = data.voteCount;
-      const { songLink1, songLink2 } = this.state;
+      const { songLink1 } = this.state;
       if (songlink === songLink1) this.setState({ vote1Count: voteCount });
       else this.setState({ vote2Count: voteCount });
     });
     this.socket.on("redirect_win", () =>
       this.props.router.push("/group/win/" + this.props.router.query.roomId)
     );
+    this.socket.on("redirect_all", () => this.props.router.push("/"));
     this.socket.on("destory_room", (data: any) => {
       swal({
         icon: "warning",

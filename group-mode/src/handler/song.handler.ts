@@ -28,9 +28,6 @@ export class SongHandler {
         songlink,
         this.socket.id,
       ])
-      .then((r) => {
-        console.log("dkljfgn:" + r.command);
-      })
       .catch((err) => console.error(err));
   };
 
